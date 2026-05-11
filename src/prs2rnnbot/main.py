@@ -11,6 +11,7 @@ from middlewares.logging import LoggingMiddleware
 
 async def main():
     logger = setup_logger()
+    bot = None
     try:
         bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
         dp = Dispatcher()
@@ -21,7 +22,8 @@ async def main():
     except Exception as e:
         logger.critical(f'Critical error: {e}', exc_info=True)
     finally:
-        await bot.session.close()
+        if bot:
+            await bot.session.close()
         logger.info('Bot stopped gracefully!')
 
 
