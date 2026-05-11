@@ -5,14 +5,13 @@ from pathlib import Path
 
 
 def setup_logger(development: bool = True):
+    base_log_level = logging.INFO
+    console_log_level = logging.WARNING
+    file_log_level = logging.INFO
     if development:
         base_log_level = logging.DEBUG
         console_log_level = logging.DEBUG
         file_log_level = logging.DEBUG
-    else:
-        base_log_level = logging.INFO
-        console_log_level = logging.WARNING
-        file_log_level = logging.INFO
 
     log_dir = Path('logs')
     log_dir.mkdir(exist_ok=True)

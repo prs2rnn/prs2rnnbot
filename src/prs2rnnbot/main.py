@@ -6,6 +6,7 @@ from aiogram.client.default import DefaultBotProperties
 from core.config import BOT_TOKEN
 from core.setup_logging import setup_logger
 from core.setup_routers import setup_router
+from middlewares.logging import LoggingMiddleware
 
 
 async def main():
@@ -15,6 +16,7 @@ async def main():
         dp = Dispatcher()
         router = setup_router()
         dp.include_router(router)
+        dp.update.outer_middleware(LoggingMiddleware(logger))
         await dp.start_polling(bot)
     except Exception as e:
         logger.critical(f'Critical error: {e}', exc_info=True)
