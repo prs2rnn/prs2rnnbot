@@ -3,9 +3,8 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
-from config import BOT_TOKEN
-from handlers.user.callback import callback_router
-from handlers.user.message import message_router
+from core.config import BOT_TOKEN
+from core.setup_routers import setup_routers
 
 
 async def main():
@@ -16,7 +15,8 @@ async def main():
     try:
         bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
         dp = Dispatcher()
-        dp.include_routers(message_router, callback_router)
+        router = setup_routers()
+        dp.include_router(router)
         await dp.start_polling(bot)
     except Exception as e:
         logging.critical(f'Critical error: {e}', exc_info=True)
