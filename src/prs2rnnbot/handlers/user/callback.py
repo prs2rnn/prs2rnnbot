@@ -31,9 +31,8 @@ async def menu(callback: CallbackQuery):
 
 @user_callback_router.callback_query(F.data == 'feedback')
 async def feedback(callback: CallbackQuery, state: FSMContext):
+    text = load_html_content('feedback')
     # await callback.message.delete()
-    await callback.message.answer(
-        'Отправьте ваше сообщение автору', reply_markup=get_cancel_feedback_keyboard()
-    )
+    await callback.message.answer(text, reply_markup=get_cancel_feedback_keyboard())
     await state.set_state(FeedbackStates.waiting_for_message)
     await callback.answer()
