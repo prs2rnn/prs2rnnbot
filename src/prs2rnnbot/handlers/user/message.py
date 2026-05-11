@@ -7,7 +7,11 @@ from aiogram.types import Message, ReplyKeyboardRemove
 from core.config import ADMIN_ID
 from core.database import bot_db
 from core.utils import load_html_content
-from keyboards.user_keyboard import get_main_keyboard, get_proceed_feedback_keyboard
+from keyboards.user_keyboard import (
+    get_main_feedback_keyboard,
+    get_main_keyboard,
+    get_proceed_feedback_keyboard,
+)
 from states.state import FeedbackStates
 
 user_message_router = Router()
@@ -30,8 +34,8 @@ async def start(message: Message) -> None:
 async def cancel_proceed_feedback(message: Message, state: FSMContext):
     await state.clear()
     await message.answer('Действие отменено', reply_markup=ReplyKeyboardRemove())
-    text = load_html_content('start')
-    await message.answer(text, reply_markup=get_main_keyboard())
+    text = load_html_content('feedback')
+    await message.answer(text, reply_markup=get_main_feedback_keyboard())
 
 
 @user_message_router.message(
@@ -154,8 +158,8 @@ async def confirm_feedback(message: Message, state: FSMContext, bot: Bot):
 async def cancel_confirm_feedback(message: Message, state: FSMContext):
     await state.clear()
     await message.answer('Действие отменено', reply_markup=ReplyKeyboardRemove())
-    text = load_html_content('start')
-    await message.answer(text, reply_markup=get_main_keyboard())
+    text = load_html_content('feedback')
+    await message.answer(text, reply_markup=get_main_feedback_keyboard())
 
 
 @user_message_router.message(StateFilter(FeedbackStates.waiting_for_confirmation))

@@ -5,7 +5,7 @@ def get_main_keyboard():
     builder = InlineKeyboardBuilder()
     builder.button(text='👤 Now', callback_data='now')
     builder.button(text='📝 CV', callback_data='cv')
-    builder.button(text='📝 Связаться c автором', callback_data='feedback')
+    builder.button(text='💬 Связаться c автором', callback_data='feedback')
     builder.button(text='🌐 Сайт', url='https://prs2rnn.github.io/')
     builder.adjust(2)
     return builder.as_markup()
@@ -14,6 +14,21 @@ def get_main_keyboard():
 def get_return_keyboard():
     builder = InlineKeyboardBuilder()
     builder.button(text='🔙 Вернуться назад', callback_data='menu')
+    return builder.as_markup()
+
+
+def get_main_feedback_keyboard():
+    builder = InlineKeyboardBuilder()
+    builder.button(text='Отправить сообщение', callback_data='send')
+    builder.button(text='Другие способы связи', callback_data='contact')
+    builder.button(text='🔙 Вернуться на главную', callback_data='menu')
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def get_return_feedback_keyboard():
+    builder = InlineKeyboardBuilder()
+    builder.button(text='🔙 Вернуться назад', callback_data='feedback')
     return builder.as_markup()
 
 
