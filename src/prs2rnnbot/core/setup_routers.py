@@ -5,7 +5,7 @@ from handlers.user.callback import user_callback_router
 from handlers.user.message import user_message_router
 
 
-def setup_routers() -> Router:
+def setup_router() -> Router:
     router = Router()
     router.include_routers(
         admin_message_router,

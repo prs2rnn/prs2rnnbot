@@ -4,25 +4,23 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from core.config import BOT_TOKEN
-from core.setup_routers import setup_routers
+from core.setup_logging import setup_logger
+from core.setup_routers import setup_router
 
 
 async def main():
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s | %(name)s | %(levelname)s | %(funcName)s:%(lineno)d | %(message)s',
-    )
+    logger = setup_logger()
     try:
         bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
         dp = Dispatcher()
-        router = setup_routers()
+        router = setup_router()
         dp.include_router(router)
         await dp.start_polling(bot)
     except Exception as e:
-        logging.critical(f'Critical error: {e}', exc_info=True)
+        logger.critical(f'Critical error: {e}', exc_info=True)
     finally:
         await bot.session.close()
-        logging.info('Bot stopped gracefully!')
+        logger.info('Bot stopped gracefully!')
 
 
 if __name__ == '__main__':
