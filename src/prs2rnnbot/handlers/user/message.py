@@ -1,7 +1,10 @@
-from aiogram import F, Router
+import logging
+
+from aiogram import Bot, F, Router
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
+from core.config import ADMIN_ID
 from core.database import bot_db
 from core.utils import load_html_content
 from keyboards.user_keyboard import get_main_keyboard, get_proceed_feedback_keyboard
@@ -74,24 +77,75 @@ async def handle_proceed_feedback(message: Message, state: FSMContext):
         return
 
     await state.update_data(pending_content=content_data, content_type=content_type)
-    print(content_data, content_type)
 
     await message.answer(
         'Подтвердите или отмените отправку',
         reply_markup=get_proceed_feedback_keyboard(),
     )
-    await state.clear()
+    await state.set_state(state=None)
     await state.set_state(FeedbackStates.waiting_for_confirmation)
 
 
 @user_message_router.message(
     StateFilter(FeedbackStates.waiting_for_confirmation), F.text == 'Подтвердить'
 )
-async def confirm_feedback(message: Message, state: FSMContext):
-    await message.answer(
-        'Ваше сообщение успешно отправлено автору',
-        reply_markup=ReplyKeyboardRemove(),
-    )
+async def confirm_feedback(message: Message, state: FSMContext, bot: Bot):
+    data = await state.get_data()
+    content_data = data.get('pending_content', {})
+    content_type = data.get('content_type')
+    user = message.from_user
+    try:
+        header = (
+            f'📩 Новое сообщение от пользователя:\n\n'
+            f'Имя: {user.full_name}\n'
+            f'username: @{user.username or 'нет'}\n'
+            f'ID: {user.id}\n\n'
+        )
+
+        if content_type == 'photo':
+            await bot.send_photo(
+                ADMIN_ID,
+                photo=content_data['photo_file_id'],
+                caption=f'{header}{content_data['caption']}',
+            )
+        elif content_type == 'document':
+            await bot.send_document(
+                ADMIN_ID,
+                document=content_data['document_file_id'],
+                caption=f"{header}{content_data['caption']}",
+            )
+        elif content_type == 'video':
+            await bot.send_video(
+                ADMIN_ID,
+                video=content_data['video_file_id'],
+                caption=f"{header}{content_data['caption']}",
+            )
+        elif content_type == 'voice':
+            await bot.send_voice(
+                ADMIN_ID,
+                voice=content_data['voice_file_id'],
+                caption=f"{header}{content_data['caption']}",
+            )
+        elif content_type == 'audio':
+            await bot.send_audio(
+                ADMIN_ID,
+                audio=content_data['audio_file_id'],
+                caption=f"{header}{content_data['caption']}",
+                title=content_data.get('title'),
+                performer=content_data.get('performer'),
+            )
+        else:
+            await bot.send_message(
+                ADMIN_ID, text=f"{header}📝 Текст:\n{content_data['text']}"
+            )
+        await message.answer(
+            'Ваше сообщение успешно отправлено автору',
+            reply_markup=ReplyKeyboardRemove(),
+        )
+    except Exception as e:
+        logging.error(e)
+        await message.answer('Произошла ошибка при отправке сообщения')
+
     await state.clear()
     text = load_html_content('start')
     await message.answer(text, reply_markup=get_main_keyboard())
