@@ -1,7 +1,7 @@
 [project]
 name = "prs2rnnbot"
 version = "0.1.0"
-description = ""
+description = "A bot that serves as my personal portfolio"
 authors = [
     {name = "prs2rnn",email = "developer.prs2rnn@gmail.com"}
 ]

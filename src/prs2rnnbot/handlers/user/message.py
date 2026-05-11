@@ -102,42 +102,39 @@ async def confirm_feedback(message: Message, state: FSMContext, bot: Bot):
             f'ID: {user.id}\n\n'
         )
 
-        if content_type == 'photo':
-            await bot.send_photo(
+        send_methods = {
+            'photo': lambda: bot.send_photo(
                 ADMIN_ID,
                 photo=content_data['photo_file_id'],
-                caption=f'{header}{content_data['caption']}',
-            )
-        elif content_type == 'document':
-            await bot.send_document(
+                caption=f'{header}{content_data["caption"]}',
+            ),
+            'document': lambda: bot.send_document(
                 ADMIN_ID,
                 document=content_data['document_file_id'],
-                caption=f"{header}{content_data['caption']}",
-            )
-        elif content_type == 'video':
-            await bot.send_video(
+                caption=f'{header}{content_data["caption"]}',
+            ),
+            'video': lambda: bot.send_video(
                 ADMIN_ID,
                 video=content_data['video_file_id'],
-                caption=f"{header}{content_data['caption']}",
-            )
-        elif content_type == 'voice':
-            await bot.send_voice(
+                caption=f'{header}{content_data["caption"]}',
+            ),
+            'voice': lambda: bot.send_voice(
                 ADMIN_ID,
                 voice=content_data['voice_file_id'],
-                caption=f"{header}{content_data['caption']}",
-            )
-        elif content_type == 'audio':
-            await bot.send_audio(
+                caption=f'{header}{content_data["caption"]}',
+            ),
+            'audio': lambda: bot.send_audio(
                 ADMIN_ID,
                 audio=content_data['audio_file_id'],
-                caption=f"{header}{content_data['caption']}",
+                caption=f'{header}{content_data["caption"]}',
                 title=content_data.get('title'),
                 performer=content_data.get('performer'),
-            )
-        else:
-            await bot.send_message(
-                ADMIN_ID, text=f"{header}📝 Текст:\n{content_data['text']}"
-            )
+            ),
+            'text': lambda: bot.send_message(
+                ADMIN_ID, text=f'{header}📝 Текст:\n{content_data["text"]}'
+            ),
+        }
+        await (send_methods.get(content_type) or send_methods['text'])()
         await message.answer(
             'Ваше сообщение успешно отправлено автору',
             reply_markup=ReplyKeyboardRemove(),
