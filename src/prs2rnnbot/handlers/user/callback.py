@@ -37,7 +37,7 @@ async def feedback(callback: CallbackQuery, state: FSMContext):
 async def proceed_feedback(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
     await callback.message.answer(
-        'Напишите ваше сообщение автору', reply_markup=get_cancel_feedback_keyboard()
+        'Напишите ваше сообщение', reply_markup=get_cancel_feedback_keyboard()
     )
     await state.set_state(FeedbackStates.waiting_for_message)
     await callback.answer()

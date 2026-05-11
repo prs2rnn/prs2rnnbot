@@ -13,9 +13,6 @@ ENV APP_HOME=/app
 # Создаём рабочую директорию
 WORKDIR $APP_HOME
 
-# Создаём непривилегированного пользователя для безопасности
-RUN groupadd -r app && useradd -r -g app app
-
 # Обновляем пакеты и устанавливаем инструменты сборки
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -36,18 +33,11 @@ RUN poetry config virtualenvs.create false
 # Устанавливаем зависимости (слой кэшируется, если зависимости не менялись)
 RUN poetry install --no-interaction --no-ansi --only=main
 
-# Меняем владельца файлов на непривилегированного пользователя
-RUN chown -R app:app $APP_HOME
-USER app
-
-# Создаём директорию для логов
-RUN mkdir -p $APP_HOME/logs
-
 # Проверяем, что main.py существует
 RUN test -f src/prs2rnnbot/main.py
 
 # Открываем порт (если бот использует вебхуки)
-# EXPOSE 8080
+EXPOSE 8080
 
 # Добавляем проверку здоровья контейнера
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
