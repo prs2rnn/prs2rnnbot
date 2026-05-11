@@ -10,7 +10,7 @@ from middlewares.logging import LoggingMiddleware
 
 
 async def main():
-    logger = setup_logger()
+    logger = setup_logger(False)
     bot = None
     try:
         bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
