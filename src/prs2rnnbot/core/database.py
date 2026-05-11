@@ -48,7 +48,7 @@ class BotDatabase:
         async with self._lock:
             async with aiosqlite.connect(self._db_path) as db:
                 cursor = await db.execute(
-                    'SELECT full_name, username, original_user_id,'
+                    'SELECT full_name, username,'
                     'strftime(\'%d.%m.%Y %H:%M\', started_at, \'unixepoch\', \'+3 hours\') '
                     'started_at FROM users ORDER BY started_at DESC;'
                 )
@@ -56,16 +56,32 @@ class BotDatabase:
                 return self._format_list_of_users(rows)
 
     def _format_list_of_users(self, users: list[tuple[str]], limit=10) -> str:
-        text = '👥 Список пользователей:\n\n'
+        display_users = users[:limit]
         total = len(users)
-        for i, user in enumerate(users):
-            if i > limit:
-                break
-            text += f'• {'\t\t'.join(user)}\n'
+
+        text = '👥 Список пользователей:\n\n'
+        header = '<b>Имя</b>\t\t<b>username</b>\t\t<b>Дата регистрации</b>\n\n'
+        text += header
+
+        for user in users:
+            full_name, username, started_at = user
+            if username:
+                username = f'@{username}'
+            text += '\t\t'.join((full_name, username, started_at))
+
         if total > limit:
-            text += f'\n...И еще {total - limit} человек'
+            text += f'\n\n...и ещё {total - limit} человек'
+
         text += f'\n\nВсего пользователей: {total}'
+
         return text
 
 
 bot_db = BotDatabase()
+if __name__ == '__main__':
+
+    async def main():
+        data = await bot_db.list_users()
+        print(data)
+
+    asyncio.run(main())
