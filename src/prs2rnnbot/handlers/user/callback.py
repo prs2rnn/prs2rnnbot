@@ -4,6 +4,7 @@ from aiogram.types import CallbackQuery
 from core.utils import load_html_content
 from keyboards.user_keyboard import (
     get_cancel_feedback_keyboard,
+    get_cv_keyboard,
     get_main_feedback_keyboard,
     get_main_keyboard,
     get_return_feedback_keyboard,
@@ -12,11 +13,6 @@ from keyboards.user_keyboard import (
 from states.state import FeedbackStates
 
 user_callback_router = Router()
-
-
-@user_callback_router.callback_query(F.data == 'cv')
-async def in_progress(callback: CallbackQuery):
-    await callback.answer('Этот раздел находится в разработке!')
 
 
 @user_callback_router.callback_query(F.data == 'now')
@@ -51,3 +47,14 @@ async def proceed_feedback(callback: CallbackQuery, state: FSMContext):
 async def contact(callback: CallbackQuery):
     text = load_html_content('contact')
     await callback.message.edit_text(text, reply_markup=get_return_feedback_keyboard())
+
+
+@user_callback_router.callback_query(F.data == 'cv')
+async def cv(callback: CallbackQuery):
+    text = load_html_content('cv')
+    await callback.message.edit_text(text, reply_markup=get_cv_keyboard())
+
+
+@user_callback_router.callback_query(F.data == 'broadcast')
+async def cv(callback: CallbackQuery):
+    await callback.answer('Этот раздел находится в разработке')
