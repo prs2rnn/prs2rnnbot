@@ -1,4 +1,6 @@
+import asyncio
 import logging
+import random
 
 from aiogram import Bot, F, Router
 from aiogram.filters import Command, StateFilter
@@ -87,56 +89,63 @@ async def confirm_broadcast(message: Message, state: FSMContext, bot: Bot):
     content_data = data.get('pending_content', {})
     content_type = data.get('content_type')
     users = await bot_db.get_subscribed_users()
+    send_methods = {
+        'photo': lambda user_id: bot.send_photo(
+            user_id,
+            photo=content_data['photo_file_id'],
+            caption=content_data['caption'],
+        ),
+        'document': lambda user_id: bot.send_document(
+            user_id,
+            document=content_data['document_file_id'],
+            caption=content_data['caption'],
+        ),
+        'video': lambda user_id: bot.send_video(
+            user_id,
+            video=content_data['video_file_id'],
+            caption=content_data['caption'],
+        ),
+        'voice': lambda user_id: bot.send_voice(
+            user_id,
+            voice=content_data['voice_file_id'],
+            caption=content_data['caption'],
+        ),
+        'audio': lambda user_id: bot.send_audio(
+            user_id,
+            audio=content_data['audio_file_id'],
+            caption=content_data['caption'],
+            title=content_data.get('title'),
+            performer=content_data.get('performer'),
+        ),
+        'text': lambda user_id: bot.send_message(user_id, text=content_data['text']),
+    }
+    success, failure = 0, 0
+    await message.answer('Начинаю рассылку...', reply_markup=ReplyKeyboardRemove())
     try:
-        send_methods = {
-            'photo': lambda user_id: bot.send_photo(
-                user_id,
-                photo=content_data['photo_file_id'],
-                caption=content_data['caption'],
-            ),
-            'document': lambda user_id: bot.send_document(
-                user_id,
-                document=content_data['document_file_id'],
-                caption=content_data['caption'],
-            ),
-            'video': lambda user_id: bot.send_video(
-                user_id,
-                video=content_data['video_file_id'],
-                caption=content_data['caption'],
-            ),
-            'voice': lambda user_id: bot.send_voice(
-                user_id,
-                voice=content_data['voice_file_id'],
-                caption=content_data['caption'],
-            ),
-            'audio': lambda user_id: bot.send_audio(
-                user_id,
-                audio=content_data['audio_file_id'],
-                caption=content_data['caption'],
-                title=content_data.get('title'),
-                performer=content_data.get('performer'),
-            ),
-            'text': lambda user_id: bot.send_message(
-                user_id, text=content_data['text']
-            ),
-        }
         for user in users:
-            await (send_methods.get(content_type) or send_methods('text'))(user[0])
+            try:
+                await (send_methods.get(content_type) or send_methods('text'))(
+                    str(user)
+                )
+                success += 1
+                pause = random.uniform(0.8, 1.8)
+                await asyncio.sleep(pause)
+            except Exception as e:
+                failure += 1
+                logging.error(f'Error: {e}, ID: {user}')
         await message.answer(
-            'Ваше сообщение для рассылки успешно отправлено',
-            reply_markup=ReplyKeyboardRemove(),
+            f'Ваше сообщение для рассылки отправлено\n\n'
+            f'Успешно: {success}\n'
+            f'Неудачно: {failure}',
         )
     except TypeError as e:
         logging.error(e)
         await message.answer(
             'Нет пользователей, подписавшихся на рассылку. Действие отменено',
-            reply_markup=ReplyKeyboardRemove(),
         )
     except Exception as e:
         logging.error(e)
-        await message.answer(
-            'Произошла ошибка при отправке рассылки', reply_markup=ReplyKeyboardRemove()
-        )
+        await message.answer('Произошла ошибка при отправке рассылки')
     await state.clear()
     text = load_html_content('admin')
     text = text.replace('{name}', message.from_user.first_name)

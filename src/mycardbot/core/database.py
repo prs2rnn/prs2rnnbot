@@ -125,7 +125,7 @@ class BotDatabase:
                     (True,),
                 )
                 result = await cursor.fetchall()
-                return (i for i in result) if result else None
+                return (i[0] for i in result) if result else None
 
 
 bot_db = BotDatabase()
