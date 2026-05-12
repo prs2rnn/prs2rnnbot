@@ -9,8 +9,11 @@ class BotDatabase:
         Path('data').mkdir(exist_ok=True)
         self._db_path = Path('data') / db_name
         self._lock = asyncio.Lock()
+        self._initialized = False
 
-    async def _ensure_tables_exist(self):
+    async def initialize(self):
+        if self._initialized:
+            return
         async with self._lock:
             async with aiosqlite.connect(self._db_path) as db:
                 await db.execute(
@@ -25,9 +28,10 @@ class BotDatabase:
                 '''
                 )
                 await db.commit()
+                self._initialized = True
 
     async def add_user(self, full_name: str, username: str, original_user_id: str):
-        await self._ensure_tables_exist()
+        await self.initialize()
         async with self._lock:
             async with aiosqlite.connect(self._db_path) as db:
                 try:
@@ -46,7 +50,7 @@ class BotDatabase:
                     return False
 
     async def list_users(self) -> str:
-        await self._ensure_tables_exist()
+        await self.initialize()
         async with self._lock:
             async with aiosqlite.connect(self._db_path) as db:
                 cursor = await db.execute(

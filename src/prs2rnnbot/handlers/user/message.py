@@ -140,7 +140,7 @@ async def confirm_feedback(message: Message, state: FSMContext, bot: Bot):
         }
         await (send_methods.get(content_type) or send_methods['text'])()
         await message.answer(
-            'Ваше сообщение успешно отправлено автору',
+            'Ваше сообщение успешно отправлено',
             reply_markup=ReplyKeyboardRemove(),
         )
     except Exception as e:
