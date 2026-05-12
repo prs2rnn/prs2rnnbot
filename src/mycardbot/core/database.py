@@ -57,7 +57,7 @@ class BotDatabase:
                 cursor = await db.execute(
                     'SELECT full_name, username,'
                     'strftime(\'%d.%m.%Y %H:%M\', started_at, \'unixepoch\', \'+3 hours\') '
-                    'started_at FROM users ORDER BY started_at DESC;'
+                    'started_at, is_subscribed FROM users ORDER BY started_at DESC;'
                 )
                 rows = await cursor.fetchall()
                 return self._format_list_of_users(rows)
@@ -67,13 +67,18 @@ class BotDatabase:
         total = len(users)
 
         text = '👥 Список пользователей:\n\n'
-        header = '<b>Имя</b>\t\t<b>username</b>\t\t<b>Дата регистрации</b>\n\n'
+        header = '<b>Имя</b>\t\t<b>username</b>\t\t<b>Дата регистрации</b>\t\t<b>Подписка на рассылку</b>\n\n'
         text += header
 
         for user in users:
-            full_name, username, started_at = user
+            full_name, username, started_at, is_subscribed = user
             text += '\t\t'.join(
-                (full_name or 'нет', f'@{username or 'нет'}', started_at or 'нет')
+                (
+                    full_name or 'нет',
+                    f'@{username or 'нет'}',
+                    started_at or 'нет',
+                    str(is_subscribed) or 'нет',
+                )
             )
             text += '\n'
 
