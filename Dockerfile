@@ -21,11 +21,11 @@ RUN poetry config virtualenvs.create false
 
 RUN poetry install --no-interaction --no-ansi --only=main
 
-RUN test -f src/prs2rnnbot/main.py
+RUN test -f src/mycardbot/main.py
 
 # EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD python -c "import sys; sys.exit(0)" || exit 1
 
-CMD ["python", "src/prs2rnnbot/main.py"]
+CMD ["python", "src/mycardbot/main.py"]

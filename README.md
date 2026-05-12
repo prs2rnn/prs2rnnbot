@@ -1,4 +1,4 @@
-# Prs2rnnBot
+# MyCardBot
 
 An interactive Telegram bot that serves as a personal portfolio. It allows users to explore my skills, resume, and blog content, and get in touch directly - all within the Telegram interface.
 
