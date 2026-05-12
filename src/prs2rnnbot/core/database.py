@@ -1,11 +1,13 @@
 import asyncio
+from pathlib import Path
 
 import aiosqlite
 
 
 class BotDatabase:
-    def __init__(self, db_path: str = 'bot.db'):
-        self._db_path = db_path
+    def __init__(self, db_name: str = 'bot.db'):
+        Path('data').mkdir(exist_ok=True)
+        self._db_path = Path('data') / db_name
         self._lock = asyncio.Lock()
 
     async def _ensure_tables_exist(self):
@@ -68,6 +70,7 @@ class BotDatabase:
             text += '\t\t'.join(
                 (full_name or 'нет', f'@{username or 'нет'}', started_at or 'нет')
             )
+            text += '\n'
 
         if total > limit:
             text += f'\n\n...и ещё {total - limit} человек'
