@@ -1,3 +1,5 @@
+import html
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
@@ -24,7 +26,7 @@ async def list(callback: CallbackQuery) -> None:
 @admin_callback_router.callback_query(F.data == 'admin_menu', IsAdmin())
 async def menu(callback: CallbackQuery) -> None:
     text = load_html_content('admin')
-    text = text.replace('{name}', callback.from_user.first_name)
+    text = text.replace('{name}', html.escape(callback.from_user.first_name))
     await callback.message.edit_text(text, reply_markup=get_main_keyboard())
     await callback.answer()
 

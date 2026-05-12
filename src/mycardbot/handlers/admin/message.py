@@ -1,4 +1,5 @@
 import asyncio
+import html
 import logging
 import random
 
@@ -18,7 +19,7 @@ admin_message_router = Router()
 @admin_message_router.message(Command('admin'), IsAdmin())
 async def list(message: Message) -> None:
     text = load_html_content('admin')
-    text = text.replace('{name}', message.from_user.first_name)
+    text = text.replace('{name}', html.escape(message.from_user.first_name))
     await message.answer(text, reply_markup=get_main_keyboard())
 
 
@@ -29,7 +30,7 @@ async def cancel_broadcast(message: Message, state: FSMContext):
     await state.clear()
     await message.answer('Действие отменено', reply_markup=ReplyKeyboardRemove())
     text = load_html_content('admin')
-    text = text.replace('{name}', message.from_user.first_name)
+    text = text.replace('{name}', html.escape(message.from_user.first_name))
     await message.answer(text, reply_markup=get_main_keyboard())
 
 
@@ -155,7 +156,7 @@ async def confirm_broadcast(message: Message, state: FSMContext, bot: Bot):
         await message.answer('Произошла ошибка при отправке рассылки')
     await state.clear()
     text = load_html_content('admin')
-    text = text.replace('{name}', message.from_user.first_name)
+    text = text.replace('{name}', html.escape(message.from_user.first_name))
     await message.answer(text, reply_markup=get_main_keyboard())
 
 
@@ -166,7 +167,7 @@ async def cancel_confirm_broadcast(message: Message, state: FSMContext):
     await state.clear()
     await message.answer('Действие отменено', reply_markup=ReplyKeyboardRemove())
     text = load_html_content('admin')
-    text = text.replace('{name}', message.from_user.first_name)
+    text = text.replace('{name}', html.escape(message.from_user.first_name))
     await message.answer(text, reply_markup=get_main_keyboard())
 
 

@@ -46,9 +46,9 @@ class BotDatabase:
                         ),
                     )
                     await db.commit()
-                    return True
-                except aiosqlite.IntegrityError as e:
                     return False
+                except aiosqlite.IntegrityError as e:
+                    return True
 
     async def list_users(self) -> str:
         await self.initialize()
