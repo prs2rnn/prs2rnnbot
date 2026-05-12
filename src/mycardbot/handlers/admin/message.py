@@ -64,6 +64,9 @@ async def handle_broadcast(message: Message, state: FSMContext):
         content_data['audio_file_id'] = message.audio.file_id
         content_data['title'] = message.audio.title
         content_data['performer'] = message.audio.performer
+    elif message.video_note:
+        content_type = 'video_note'
+        content_data['video_note_file_id'] = message.video_note.file_id
     elif message.text:
         content_type = 'text'
         content_data['text'] = message.text
@@ -116,6 +119,10 @@ async def confirm_broadcast(message: Message, state: FSMContext, bot: Bot):
             caption=content_data['caption'],
             title=content_data.get('title'),
             performer=content_data.get('performer'),
+        ),
+        'video_note': lambda user_id: bot.send_video_note(
+            user_id,
+            video_note=content_data['video_note_file_id'],
         ),
         'text': lambda user_id: bot.send_message(user_id, text=content_data['text']),
     }
