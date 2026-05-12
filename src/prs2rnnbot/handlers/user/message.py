@@ -165,7 +165,6 @@ async def cancel_confirm_feedback(message: Message, state: FSMContext):
 @user_message_router.message(StateFilter(FeedbackStates.waiting_for_confirmation))
 async def handle_confirm_feedback(message: Message, state: FSMContext):
     user_message = message.text
-    print(user_message)
     await message.answer(
         'Подтвердите или отмените отправку',
         reply_markup=get_proceed_feedback_keyboard(),

@@ -7,7 +7,7 @@ def get_main_keyboard():
     builder.button(text='📝 CV', callback_data='cv')
     builder.button(text='💬 Связаться c автором', callback_data='feedback')
     builder.button(text='🌐 Сайт', url='https://prs2rnn.github.io/')
-    builder.button(text='📩 Рассылка', callback_data='broadcast')
+    builder.button(text='📨 Рассылка', callback_data='broadcast')
     builder.adjust(2)
     return builder.as_markup()
 
@@ -51,4 +51,20 @@ def get_cv_keyboard():
     builder = InlineKeyboardBuilder()
     builder.button(text='💬 Связаться c автором', callback_data='feedback')
     builder.button(text='🔙 Вернуться на главную', callback_data='menu')
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def get_broadcast_keyboard(is_subscribed: bool):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=(
+            '🔔 Подписаться на рассылку'
+            if not is_subscribed
+            else '🔕 Отписаться от рассылки'
+        ),
+        callback_data='subscribe' if not is_subscribed else 'unsubscribe',
+    )
+    builder.button(text='🔙 Вернуться на главную', callback_data='menu')
+    builder.adjust(1)
     return builder.as_markup()

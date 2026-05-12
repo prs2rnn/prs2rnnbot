@@ -23,7 +23,8 @@ class BotDatabase:
                     full_name TEXT,
                     username TEXT UNIQUE,
                     original_user_id TEXT UNIQUE NOT NULL,
-                    started_at REAL DEFAULT ( strftime('%s', 'now') )
+                    started_at REAL DEFAULT ( strftime('%s', 'now') ),
+                    is_subscribed BOOLEAN DEFAULT FALSE
                 );
                 '''
                 )
@@ -83,12 +84,44 @@ class BotDatabase:
 
         return text
 
+    async def subscribe(self, user_id: str):
+        await self.initialize()
+        async with self._lock:
+            async with aiosqlite.connect(self._db_path) as db:
+                await db.execute(
+                    'UPDATE users SET is_subscribed = True WHERE original_user_id = ?',
+                    (user_id,),
+                )
+                await db.commit()
+
+    async def unsubscribe(self, user_id: str):
+        await self.initialize()
+        async with self._lock:
+            async with aiosqlite.connect(self._db_path) as db:
+                await db.execute(
+                    'UPDATE users SET is_subscribed = False WHERE original_user_id = ?',
+                    (user_id,),
+                )
+                await db.commit()
+
+    async def is_subscribed(self, user_id: str) -> bool | int:
+        await self.initialize()
+        async with self._lock:
+            async with aiosqlite.connect(self._db_path) as db:
+                cursor = await db.execute(
+                    'SELECT is_subscribed FROM users WHERE original_user_id = ?',
+                    (user_id,),
+                )
+
+                result = await cursor.fetchone()
+                return result[0] if result else None
+
 
 bot_db = BotDatabase()
 if __name__ == '__main__':
 
     async def main():
-        data = await bot_db.list_users()
+        data = await bot_db.subscribe('6288389426')
         print(data)
 
     asyncio.run(main())

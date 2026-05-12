@@ -1,8 +1,10 @@
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
+from core.database import bot_db
 from core.utils import load_html_content
 from keyboards.user_keyboard import (
+    get_broadcast_keyboard,
     get_cancel_feedback_keyboard,
     get_cv_keyboard,
     get_main_feedback_keyboard,
@@ -61,5 +63,37 @@ async def cv(callback: CallbackQuery):
 
 
 @user_callback_router.callback_query(F.data == 'broadcast')
-async def cv(callback: CallbackQuery):
-    await callback.answer('Этот раздел находится в разработке')
+async def broadcast(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    is_subscribed = await bot_db.is_subscribed(user_id)
+    text = load_html_content('broadcast')
+    await callback.message.edit_text(
+        text, reply_markup=get_broadcast_keyboard(is_subscribed)
+    )
+    await callback.answer()
+
+
+@user_callback_router.callback_query(F.data == 'unsubscribe')
+@user_callback_router.callback_query(F.data == 'subscribe')
+async def proceed_subscription(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    is_subscribed = await bot_db.is_subscribed(user_id)
+
+    if is_subscribed is None:
+        await bot_db.add_user(
+            callback.from_user.full_name, callback.from_user.username, user_id
+        )
+
+    await (
+        bot_db.subscribe(user_id) if not is_subscribed else bot_db.unsubscribe(user_id)
+    )
+
+    await callback.message.edit_reply_markup(
+        reply_markup=get_broadcast_keyboard(not is_subscribed)
+    )
+
+    await callback.answer(
+        'Вы подписались на рассылку!'
+        if not is_subscribed
+        else 'Вы отписались от рассылки!'
+    )
