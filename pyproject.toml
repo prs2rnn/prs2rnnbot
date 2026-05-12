@@ -1,7 +1,7 @@
 [project]
-name = "prs2rnnbot"
+name = "mycardbot"
 version = "0.1.0"
-description = "A bot that serves as my personal portfolio"
+description = "MyCardBot is a bot that serves as a personal portfolio"
 authors = [
     {name = "prs2rnn",email = "developer.prs2rnn@gmail.com"}
 ]
@@ -14,7 +14,7 @@ dependencies = [
     "aiosqlite (>=0.22.1,<0.23.0)"
 ]
 [tool.poetry]
-packages = [{include = "prs2rnnbot", from = "src"}]
+packages = [{include = "mycardbot", from = "src"}]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -27,5 +27,5 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = [
-  "src/prs2rnnbot",
+  "src/mycardbot",
 ]

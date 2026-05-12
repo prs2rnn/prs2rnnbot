@@ -21,3 +21,8 @@ async def menu(callback: CallbackQuery) -> None:
     text = text.replace('{name}', callback.from_user.first_name)
     await callback.message.edit_text(text, reply_markup=get_main_keyboard())
     await callback.answer()
+
+
+@admin_callback_router.callback_query(F.data == 'admin_broadcast', IsAdmin())
+async def broadcast(callback: CallbackQuery):
+    await callback.answer('Этот раздел в разработке')
