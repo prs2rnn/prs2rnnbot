@@ -65,9 +65,9 @@ class BotDatabase:
 
         for user in users:
             full_name, username, started_at = user
-            if username:
-                username = f'@{username}'
-            text += '\t\t'.join((full_name, username, started_at))
+            text += '\t\t'.join(
+                (full_name or 'нет', f'@{username or 'нет'}', started_at or 'нет')
+            )
 
         if total > limit:
             text += f'\n\n...и ещё {total - limit} человек'
