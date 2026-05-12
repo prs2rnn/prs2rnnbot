@@ -19,18 +19,21 @@ user_callback_router = Router()
 async def now(callback: CallbackQuery):
     text = load_html_content('now')
     await callback.message.edit_text(text, reply_markup=get_return_keyboard())
+    await callback.answer()
 
 
 @user_callback_router.callback_query(F.data == 'menu')
 async def menu(callback: CallbackQuery):
     text = load_html_content('start')
     await callback.message.edit_text(text, reply_markup=get_main_keyboard())
+    await callback.answer()
 
 
 @user_callback_router.callback_query(F.data == 'feedback')
 async def feedback(callback: CallbackQuery, state: FSMContext):
     text = load_html_content('feedback')
     await callback.message.edit_text(text, reply_markup=get_main_feedback_keyboard())
+    await callback.answer()
 
 
 @user_callback_router.callback_query(F.data == 'send')
@@ -47,12 +50,14 @@ async def proceed_feedback(callback: CallbackQuery, state: FSMContext):
 async def contact(callback: CallbackQuery):
     text = load_html_content('contact')
     await callback.message.edit_text(text, reply_markup=get_return_feedback_keyboard())
+    await callback.answer()
 
 
 @user_callback_router.callback_query(F.data == 'cv')
 async def cv(callback: CallbackQuery):
     text = load_html_content('cv')
     await callback.message.edit_text(text, reply_markup=get_cv_keyboard())
+    await callback.answer()
 
 
 @user_callback_router.callback_query(F.data == 'broadcast')

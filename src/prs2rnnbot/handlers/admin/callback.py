@@ -12,6 +12,7 @@ admin_callback_router = Router()
 async def list(callback: CallbackQuery) -> None:
     text = await bot_db.list_users()
     await callback.message.edit_text(text, reply_markup=get_return_keyboard())
+    await callback.answer()
 
 
 @admin_callback_router.callback_query(F.data == 'admin_menu', IsAdmin())
@@ -19,3 +20,4 @@ async def menu(callback: CallbackQuery) -> None:
     text = load_html_content('admin')
     text = text.replace('{name}', callback.from_user.first_name)
     await callback.message.edit_text(text, reply_markup=get_main_keyboard())
+    await callback.answer()
