@@ -12,7 +12,7 @@ from keyboards.user_keyboard import (
     get_main_keyboard,
     get_proceed_feedback_keyboard,
 )
-from states.state import FeedbackStates
+from states.user import FeedbackStates
 
 user_message_router = Router()
 
@@ -164,7 +164,6 @@ async def cancel_confirm_feedback(message: Message, state: FSMContext):
 
 @user_message_router.message(StateFilter(FeedbackStates.waiting_for_confirmation))
 async def handle_confirm_feedback(message: Message, state: FSMContext):
-    user_message = message.text
     await message.answer(
         'Подтвердите или отмените отправку',
         reply_markup=get_proceed_feedback_keyboard(),

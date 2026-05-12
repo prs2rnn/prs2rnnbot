@@ -116,6 +116,17 @@ class BotDatabase:
                 result = await cursor.fetchone()
                 return result[0] if result else None
 
+    async def get_subscribed_users(self):
+        await self.initialize()
+        async with self._lock:
+            async with aiosqlite.connect(self._db_path) as db:
+                cursor = await db.execute(
+                    'SELECT original_user_id FROM users WHERE is_subscribed = ?',
+                    (True,),
+                )
+                result = await cursor.fetchall()
+                return (i for i in result) if result else None
+
 
 bot_db = BotDatabase()
 if __name__ == '__main__':

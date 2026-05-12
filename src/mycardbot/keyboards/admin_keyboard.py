@@ -1,4 +1,4 @@
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 
 def get_main_keyboard():
@@ -14,3 +14,17 @@ def get_return_keyboard():
     builder = InlineKeyboardBuilder()
     builder.button(text='🔙 Вернуться назад', callback_data='admin_menu')
     return builder.as_markup()
+
+
+def get_cancel_broadcast_keyboard():
+    builder = ReplyKeyboardBuilder()
+    builder.button(text='Отменить')
+    return builder.as_markup(resize_keyboard=True)
+
+
+def get_proceed_broadcast_keyboard():
+    builder = ReplyKeyboardBuilder()
+    builder.button(text='Подтвердить')
+    builder.button(text='Отменить')
+    builder.adjust(1)
+    return builder.as_markup(resize_keyboard=True)

@@ -12,7 +12,7 @@ from keyboards.user_keyboard import (
     get_return_feedback_keyboard,
     get_return_keyboard,
 )
-from states.state import FeedbackStates
+from states.user import FeedbackStates
 
 user_callback_router = Router()
 
