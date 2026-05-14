@@ -134,10 +134,3 @@ class BotDatabase:
 
 
 bot_db = BotDatabase()
-if __name__ == '__main__':
-
-    async def main():
-        data = await bot_db.subscribe('6288389426')
-        print(data)
-
-    asyncio.run(main())
