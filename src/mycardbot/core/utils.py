@@ -1,8 +1,12 @@
 import asyncio
 import logging
+import time
 from pathlib import Path
 
 import httpx
+
+CACHE = {'data': None, 'updated_at': 0}
+CACHE_TTL = 60 * 10
 
 
 def load_html_content(section: str) -> str:
@@ -24,15 +28,27 @@ async def fetch_json(url: str):
 
 
 async def get_changelog():
+    now = time.perf_counter()
+
+    if CACHE['data'] and now - CACHE['updated_at'] < CACHE_TTL:
+        logging.info('Retrieve changelog data from cache')
+        return CACHE['data']
+
     url = 'https://api.github.com/repos/prs2rnn/mycardbot/releases'
+
     data = await fetch_json(url)
+
     if not data:
         return []
 
-    data = [
+    result = [
         {'version': r.get('name', 'unknown'), 'text': r.get('body', '')} for r in data
-    ][:5]
-    return data
+    ][0]
+
+    CACHE['data'] = result
+    CACHE['updated_at'] = now
+
+    return result
 
 
 if __name__ == '__main__':

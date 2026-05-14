@@ -101,13 +101,12 @@ async def proceed_subscription(callback: CallbackQuery):
 
 @user_callback_router.callback_query(F.data == 'changelog')
 async def changelog(callback: CallbackQuery):
-    releases = await get_changelog()
+    release = await get_changelog()
     text = 'Последние обновления:\n\n'
-    if not releases:
+    if not release:
         text += 'Не удалось получить информацию от сервера'
     else:
-        for r in releases:
-            text += f'*{r['version']}*\n{r['text']}\n\n'
+        text += f'*{release['version']}*\n{release['text']}\n\n'
 
     await callback.message.edit_text(
         text, reply_markup=get_return_keyboard(), parse_mode='Markdown'
