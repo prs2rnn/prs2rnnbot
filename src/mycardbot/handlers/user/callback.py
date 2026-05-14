@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from core.database import bot_db
-from core.utils import load_html_content
+from core.utils import get_changelog, load_html_content
 from keyboards.user_keyboard import (
     get_broadcast_keyboard,
     get_cancel_feedback_keyboard,
@@ -96,4 +96,19 @@ async def proceed_subscription(callback: CallbackQuery):
         'Вы подписались на рассылку!'
         if not is_subscribed
         else 'Вы отписались от рассылки!'
+    )
+
+
+@user_callback_router.callback_query(F.data == 'changelog')
+async def changelog(callback: CallbackQuery):
+    releases = await get_changelog()
+    text = 'Последние обновления:\n\n'
+    if not releases:
+        text += 'Не удалось получить информацию от сервера'
+    else:
+        for r in releases:
+            text += f'*{r['version']}*\n{r['text']}\n\n'
+
+    await callback.message.edit_text(
+        text, reply_markup=get_return_keyboard(), parse_mode='Markdown'
     )

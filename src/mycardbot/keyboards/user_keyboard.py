@@ -8,6 +8,7 @@ def get_main_keyboard():
     builder.button(text='💬 Связаться c автором', callback_data='feedback')
     builder.button(text='🌐 Сайт', url='https://prs2rnn.github.io/')
     builder.button(text='📨 Рассылка', callback_data='broadcast')
+    builder.button(text='📦 Что нового', callback_data='changelog')
     builder.adjust(2)
     return builder.as_markup()
 
