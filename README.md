@@ -1,18 +1,50 @@
 # MyCardBot
 
-An interactive Telegram bot that serves as a personal portfolio. It allows users to explore skills, resume, and blog content, and get in touch directly - all within the Telegram interface.
+Telegram bot that acts as a personal portfolio and contact hub.
+Users can explore skills, resume, blog content, and contact information directly inside Telegram.
 
-![](Screenshot_1.jpg)
+## Preview
+
+![Bot Preview](Screenshot_1.jpg)
+
+## Features
+
+- Personal portfolio inside Telegram
+- Skills & experience showcase
+- Blog / updates system (changelog-ready)
+- Direct contact interface
+- Fast async performance
+- Lightweight SQLite storage
 
 ## Tech Stack
 
-* **Language**: Python 3.14
-* **Framework**: [aiogram 3.x](https://docs.aiogram.dev/) (async Telegram bot framework)
-* **Database**: SQLite with [aiosqlite](https://pypi.org/project/aiosqlite/) (async wrapper)
-* **Dependency Management**: `poetry`
-* **Configuration**: Environment variables (`.env`)
-* **Logging**: Built‑in `logging` module
+- **Language**: Python 3.14
+- **Framework**: [Aiogram 3.x](https://docs.aiogram.dev/) — modern async Telegram bot framework
+- **Database**: SQLite via [aiosqlite](https://pypi.org/project/aiosqlite/)
+- **Dependency Management**: Poetry
+- **Configuration**: Environment variables (`.env`)
+- **Logging**: Built-in Python `logging`
+
+## CI/CD
+
+This project is extended with:
+
+- GitHub Actions
+- Semantic versioning (python-semantic-release)
+- Docker containerization
+- Automatic releases
 
 ## Contributing
 
-All types of contributions are encouraged and welcome!
+Contributions are welcome!
+
+You can help by:
+
+- Reporting bugs
+- Suggesting features
+- Improving architecture
+- Writing tests
+
+## License
+
+This project is licensed under the MIT License.
