@@ -41,13 +41,7 @@ poetry install
 
 3. Setup environment
 
-Create .env file:
-
-```bash
-BOT_TOKEN=your_telegram_bot_token
-ADMIN_IDS=[12345]
-DEBUG=true
-```
+Create .env file
 
 4. Run bot
 
