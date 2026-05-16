@@ -41,7 +41,8 @@ poetry install
 
 3. Setup environment
 
-Create .env file
+- Create .env file
+- Create private channel and add the bot to it as admin
 
 4. Run bot
 
