@@ -37,13 +37,9 @@ class BotDatabase:
             async with aiosqlite.connect(self._db_path) as db:
                 try:
                     await db.execute(
-                        'INSERT INTO users (full_name, username, original_user_id) '
-                        'VALUES (?, ?, ?);',
-                        (
-                            full_name,
-                            username,
-                            original_user_id,
-                        ),
+                        'INSERT INTO users (full_name, username, original_user_id, is_subscribed) '
+                        'VALUES (?, ?, ?, ?);',
+                        (full_name, username, original_user_id, False),
                     )
                     await db.commit()
                     return False
@@ -74,10 +70,10 @@ class BotDatabase:
             full_name, username, started_at, is_subscribed = user
             text += '\t\t'.join(
                 (
-                    full_name or 'нет',
-                    f'@{username or 'нет'}',
-                    started_at or 'нет',
-                    str(is_subscribed) or 'нет',
+                    full_name,
+                    f'@{username}',
+                    started_at,
+                    str(is_subscribed),
                 )
             )
             text += '\n'
