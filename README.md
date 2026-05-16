@@ -1,11 +1,19 @@
 # MyCardBot
 
+![Python](https://img.shields.io/badge/python-3.14-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![GitHub release](https://img.shields.io/github/v/release/prs2rnn/mycardbot)
+[![CI](https://github.com/prs2rnn/mycardbot/actions/workflows/release.yml/badge.svg)](
+https://github.com/prs2rnn/mycardbot/actions
+)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
+
 Telegram bot that acts as a personal portfolio and contact hub.
 Users can explore skills, resume, blog content, and contact information directly inside Telegram.
 
 ## Preview
 
-![Bot Preview](Screenshot_1.jpg)
+<img src="Animation.gif" width="50%">
 
 ## Features
 
@@ -33,6 +41,17 @@ This project is extended with:
 - Semantic versioning (python-semantic-release)
 - Docker containerization
 - Automatic releases
+
+## Architecture Notes
+
+- Fully asynchronous (async/await)
+- Database layer separated from bot logic
+- Designed for easy scaling (can migrate to PostgreSQL later)
+- Clean separation of handlers and services
+
+## Live Demo
+
+[![Telegram](https://img.shields.io/badge/Telegram-Open%20Bot-blue?logo=telegram)](https://t.me/Prs2rnnBot)
 
 ## Contributing
 
