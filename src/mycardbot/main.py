@@ -4,6 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from core.config import setting
+from core.setup_commands import set_commands
 from core.setup_logging import setup_logger
 from core.setup_routers import setup_router
 from middlewares.logging import LoggingMiddleware
@@ -15,6 +16,7 @@ async def main():
     bot = None
     try:
         bot = Bot(setting.bot_token, default=DefaultBotProperties(parse_mode='HTML'))
+        await set_commands(bot, setting.admin_ids)
         dp = Dispatcher()
         router = setup_router()
         dp.include_router(router)
