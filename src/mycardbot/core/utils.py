@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import random
 import time
 from pathlib import Path
 
@@ -73,6 +74,9 @@ async def extract_content_from_message(message: Message) -> tuple[dict, str]:
         content_type = 'video'
         content_data['caption'] = message.caption or "Видео без описания"
         content_data['video_file_id'] = message.video.file_id
+    elif message.video_note:
+        content_type = 'video_note'
+        content_data['video_note_file_id'] = message.video_note.file_id
     elif message.voice:
         content_type = 'voice'
         content_data['caption'] = message.caption or "Голосовое сообщение"
@@ -97,7 +101,7 @@ async def extract_content_from_message(message: Message) -> tuple[dict, str]:
 
 async def send_message(bot: Bot, user: User, content_type: str, content_data: dict):
     header = (
-        f'📩 Новое сообщение от пользователя:\n\n'
+        f'👤 Новое сообщение от пользователя:\n\n'
         f'Имя: {user.full_name}\n'
         f'username: @{user.username}\n'
         f'ID: {user.id}\n\n'
@@ -118,6 +122,10 @@ async def send_message(bot: Bot, user: User, content_type: str, content_data: di
             setting.channel_id,
             video=content_data['video_file_id'],
             caption=f'{header}{content_data["caption"]}',
+        ),
+        'video_note': lambda: bot.send_video_note(
+            setting.channel_id,
+            video_note=content_data['video_note_file_id'],
         ),
         'voice': lambda: bot.send_voice(
             setting.channel_id,
@@ -149,3 +157,78 @@ async def send_message(bot: Bot, user: User, content_type: str, content_data: di
             'Произошла ошибка при отправке сообщения',
             reply_markup=ReplyKeyboardRemove(),
         )
+
+
+async def send_broadcast(
+    bot: Bot, admin: User, users: list[Users], content_type: str, content_data: dict
+):
+    header = f'📢 Новая рассылка от бота:\n\n'
+
+    send_methods = {
+        'photo': lambda user_id: bot.send_photo(
+            user_id,
+            photo=content_data['photo_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+        ),
+        'document': lambda user_id: bot.send_document(
+            user_id,
+            document=content_data['document_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+        ),
+        'video': lambda user_id: bot.send_video(
+            user_id,
+            video=content_data['video_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+        ),
+        'video_note': lambda user_id: bot.send_video_note(
+            user_id,
+            video_note=content_data['video_note_file_id'],
+        ),
+        'voice': lambda user_id: bot.send_voice(
+            user_id,
+            voice=content_data['voice_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+        ),
+        'audio': lambda user_id: bot.send_audio(
+            user_id,
+            audio=content_data['audio_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+            title=content_data.get('title'),
+            performer=content_data.get('performer'),
+        ),
+        'text': lambda user_id: bot.send_message(
+            user_id, text=f'{header}Текст:\n{content_data["text"]}'
+        ),
+    }
+    success, failure = 0, 0
+    await bot.send_message(
+        admin.id, 'Начинаю рассылку...', reply_markup=ReplyKeyboardRemove()
+    )
+    if not users:
+        await bot.send_message(
+            admin.id,
+            'Нет пользователей, подписавшихся на рассылку. Действие отменено',
+        )
+        return
+    try:
+        for user in users:
+            try:
+                await send_methods.get(content_type)(str(user))
+                success += 1
+                pause = random.uniform(0.8, 1.8)
+                await asyncio.sleep(pause)
+            except Exception as e:
+                failure += 1
+                logging.error(f'Error: {e}, ID: {user}')
+        await bot.send_message(
+            admin.id,
+            f'Ваше сообщение для рассылки отправлено\n\n'
+            f'Успешно: {success}\n'
+            f'Неудачно: {failure}',
+        )
+    except Exception as e:
+        logging.error(e)
+        await bot.send_message(admin.id, 'Произошла ошибка при отправке рассылки')
+
+    # archive to channel
+    await send_methods.get(content_type)(setting.channel_id)
