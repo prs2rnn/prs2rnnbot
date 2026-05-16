@@ -5,7 +5,7 @@ from pathlib import Path
 
 import httpx
 from aiogram import Bot
-from aiogram.types import ReplyKeyboardRemove, User
+from aiogram.types import Message, ReplyKeyboardRemove, User
 from core.config import setting
 
 CACHE = {'data': None, 'updated_at': 0}
@@ -52,6 +52,47 @@ async def get_changelog():
     CACHE['updated_at'] = now
 
     return result
+
+
+async def extract_content_from_message(message: Message) -> tuple[dict, str]:
+    content_data = {}
+    content_type = None
+
+    if message.photo:
+        content_type = 'photo'
+        content_data['caption'] = message.caption or 'Фото без описания'
+        content_data['photo_file_id'] = message.photo[-1].file_id
+    elif message.document:
+        content_type = 'document'
+        content_data['caption'] = (
+            message.caption or f"Документ: {message.document.file_name}"
+        )
+        content_data['document_file_id'] = message.document.file_id
+        content_data['file_name'] = message.document.file_name
+    elif message.video:
+        content_type = 'video'
+        content_data['caption'] = message.caption or "Видео без описания"
+        content_data['video_file_id'] = message.video.file_id
+    elif message.voice:
+        content_type = 'voice'
+        content_data['caption'] = message.caption or "Голосовое сообщение"
+        content_data['voice_file_id'] = message.voice.file_id
+        content_data['duration'] = message.voice.duration
+    elif message.audio:
+        content_type = 'audio'
+        content_data['caption'] = (
+            message.caption or f"Аудио: {message.audio.title or 'Без названия'}"
+        )
+        content_data['audio_file_id'] = message.audio.file_id
+        content_data['title'] = message.audio.title
+        content_data['performer'] = message.audio.performer
+    elif message.text:
+        content_type = 'text'
+        content_data['text'] = message.text
+    else:
+        await message.answer('Этот тип сообщения не поддерживается')
+
+    return content_data, content_type
 
 
 async def send_message(bot: Bot, user: User, content_type: str, content_data: dict):

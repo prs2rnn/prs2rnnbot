@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 from core.config import setting
 from core.database import bot_db
-from core.utils import load_html_content, send_message
+from core.utils import extract_content_from_message, load_html_content, send_message
 from keyboards.user_keyboard import (
     get_main_feedback_keyboard,
     get_main_keyboard,
@@ -37,42 +37,8 @@ async def cancel_proceed_feedback(message: Message, state: FSMContext):
     StateFilter(FeedbackStates.waiting_for_message),
 )
 async def handle_proceed_feedback(message: Message, state: FSMContext):
-    content_data = {}
-    content_type = None
-
-    if message.photo:
-        content_type = 'photo'
-        content_data['caption'] = message.caption or 'Фото без описания'
-        content_data['photo_file_id'] = message.photo[-1].file_id
-    elif message.document:
-        content_type = 'document'
-        content_data['caption'] = (
-            message.caption or f"Документ: {message.document.file_name}"
-        )
-        content_data['document_file_id'] = message.document.file_id
-        content_data['file_name'] = message.document.file_name
-    elif message.video:
-        content_type = 'video'
-        content_data['caption'] = message.caption or "Видео без описания"
-        content_data['video_file_id'] = message.video.file_id
-    elif message.voice:
-        content_type = 'voice'
-        content_data['caption'] = message.caption or "Голосовое сообщение"
-        content_data['voice_file_id'] = message.voice.file_id
-        content_data['duration'] = message.voice.duration
-    elif message.audio:
-        content_type = 'audio'
-        content_data['caption'] = (
-            message.caption or f"Аудио: {message.audio.title or 'Без названия'}"
-        )
-        content_data['audio_file_id'] = message.audio.file_id
-        content_data['title'] = message.audio.title
-        content_data['performer'] = message.audio.performer
-    elif message.text:
-        content_type = 'text'
-        content_data['text'] = message.text
-    else:
-        await message.answer('Этот тип сообщения не поддерживается')
+    content_data, content_type = await extract_content_from_message(message)
+    if not content_data or not content_type:
         return
 
     await state.update_data(pending_content=content_data, content_type=content_type)
