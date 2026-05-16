@@ -61,6 +61,7 @@ async def confirm_feedback(message: Message, state: FSMContext, bot: Bot):
     user = message.from_user
 
     await send_message(bot, user, content_type, content_data)
+
     await state.clear()
     text = load_html_content('start')
     await message.answer(text, reply_markup=get_main_keyboard())
