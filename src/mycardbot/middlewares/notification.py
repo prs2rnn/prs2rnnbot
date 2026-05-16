@@ -3,13 +3,14 @@ from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware, Bot
 from aiogram.types import Message, TelegramObject, User
-from core.config import ADMIN_ID
+from core.config import setting
 from core.database import bot_db
 
 
 class NewUserNotificationMiddleware(BaseMiddleware):
     def __init__(self, bot: Bot):
         self.bot = bot
+        self.admin_ids = setting.admin_ids
 
     async def __call__(
         self,
@@ -24,7 +25,7 @@ class NewUserNotificationMiddleware(BaseMiddleware):
             user_data = {
                 'user_id': user.id,
                 'full_name': user.full_name,
-                'username': f'@{user.username or 'нет'}',
+                'username': user.username,
             }
             is_exists = await bot_db.add_user(
                 user_data['full_name'],
@@ -40,10 +41,11 @@ class NewUserNotificationMiddleware(BaseMiddleware):
             f'🆕 Новый пользователь в базе!\n\n'
             f'ID: {user_data['user_id']}\n'
             f'Имя: {user_data['full_name']}\n'
-            f'Username: {user_data['username']}'
+            f'Username: @{user_data['username']}'
         )
         try:
-            await self.bot.send_message(chat_id=ADMIN_ID, text=text)
-            logging.info('Notification sent to administrator')
+            for admin in self.admin_ids:
+                await self.bot.send_message(chat_id=admin, text=text)
+            logging.info('Notification sent to administrators')
         except Exception as e:
             logging.error(f'Error: {e}')

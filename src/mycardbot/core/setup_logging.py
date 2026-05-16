@@ -4,11 +4,11 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 
-def setup_logger(development: bool = True):
+def setup_logger(debug: bool):
     base_log_level = logging.INFO
     console_log_level = logging.WARNING
     file_log_level = logging.INFO
-    if development:
+    if debug:
         base_log_level = logging.DEBUG
         console_log_level = logging.DEBUG
         file_log_level = logging.DEBUG

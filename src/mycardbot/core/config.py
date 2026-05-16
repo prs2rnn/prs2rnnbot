@@ -1,8 +1,11 @@
-import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from dotenv import load_dotenv
 
-load_dotenv()
+class Setting(BaseSettings):
+    model_config = SettingsConfigDict(env_file='.env')
+    bot_token: str
+    admin_ids: list[int]
+    debug: bool
 
-BOT_TOKEN = os.getenv('BOT_TOKEN')
-ADMIN_ID = os.getenv('ADMIN_ID')
+
+setting = Setting()
