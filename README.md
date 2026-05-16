@@ -24,6 +24,37 @@ Users can explore skills, resume, blog content, and contact information directly
 - Fast async performance
 - Lightweight SQLite storage
 
+## Installation
+
+1. Clone repository
+
+```bash
+git clone https://github.com/prs2rnn/mycardbot.git
+cd mycardbot
+```
+
+2. Install dependencies
+
+```bash
+poetry install
+```
+
+3. Setup environment
+
+Create .env file:
+
+```bash
+BOT_TOKEN=your_telegram_bot_token
+ADMIN_IDS=[12345]
+DEBUG=true
+```
+
+4. Run bot
+
+```bash
+poetry run python src/mycardbot/main.py
+```
+
 ## Tech Stack
 
 - **Language**: Python 3.14
@@ -48,6 +79,20 @@ This project is extended with:
 - Database layer separated from bot logic
 - Designed for easy scaling (can migrate to PostgreSQL later)
 - Clean separation of handlers and services
+
+## Database
+
+The bot uses SQLite and automatically creates tables on first launch.
+
+No manual setup required.
+
+## Development
+
+Run tests:
+
+```bash
+pytest
+```
 
 ## Live Demo
 
