@@ -6,7 +6,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 from core.config import setting
 from core.database import bot_db
-from core.utils import extract_content_from_message, load_html_content, send_message
+from core.utils import (
+    extract_content_from_message,
+    load_html_content,
+    send_user_message,
+)
 from keyboards.user_keyboard import (
     get_main_feedback_keyboard,
     get_main_keyboard,
@@ -60,7 +64,7 @@ async def confirm_feedback(message: Message, state: FSMContext, bot: Bot):
     content_type = data.get('content_type')
     user = message.from_user
 
-    await send_message(bot, user, content_type, content_data)
+    await send_user_message(bot, user, content_type, content_data)
 
     await state.clear()
     text = load_html_content('start')

@@ -55,6 +55,46 @@ async def get_changelog():
     return result
 
 
+def get_send_methods(bot: Bot, header: str, content_data: dict):
+    send_methods = {
+        'photo': lambda chat_id: bot.send_photo(
+            chat_id,
+            photo=content_data['photo_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+        ),
+        'document': lambda chat_id: bot.send_document(
+            chat_id,
+            document=content_data['document_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+        ),
+        'video': lambda chat_id: bot.send_video(
+            chat_id,
+            video=content_data['video_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+        ),
+        'video_note': lambda chat_id: bot.send_video_note(
+            chat_id,
+            video_note=content_data['video_note_file_id'],
+        ),
+        'voice': lambda chat_id: bot.send_voice(
+            chat_id,
+            voice=content_data['voice_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+        ),
+        'audio': lambda chat_id: bot.send_audio(
+            chat_id,
+            audio=content_data['audio_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+            title=content_data.get('title'),
+            performer=content_data.get('performer'),
+        ),
+        'text': lambda chat_id: bot.send_message(
+            chat_id, text=f'{header}Текст:\n{content_data["text"]}'
+        ),
+    }
+    return send_methods
+
+
 async def extract_content_from_message(message: Message) -> tuple[dict, str]:
     content_data = {}
     content_type = None
@@ -99,7 +139,9 @@ async def extract_content_from_message(message: Message) -> tuple[dict, str]:
     return content_data, content_type
 
 
-async def send_message(bot: Bot, user: User, content_type: str, content_data: dict):
+async def send_user_message(
+    bot: Bot, user: User, content_type: str, content_data: dict
+):
     header = (
         f'👤 Новое сообщение от пользователя:\n\n'
         f'Имя: {user.full_name}\n'
@@ -107,44 +149,9 @@ async def send_message(bot: Bot, user: User, content_type: str, content_data: di
         f'ID: {user.id}\n\n'
     )
 
-    send_methods = {
-        'photo': lambda: bot.send_photo(
-            setting.channel_id,
-            photo=content_data['photo_file_id'],
-            caption=f'{header}{content_data["caption"]}',
-        ),
-        'document': lambda: bot.send_document(
-            setting.channel_id,
-            document=content_data['document_file_id'],
-            caption=f'{header}{content_data["caption"]}',
-        ),
-        'video': lambda: bot.send_video(
-            setting.channel_id,
-            video=content_data['video_file_id'],
-            caption=f'{header}{content_data["caption"]}',
-        ),
-        'video_note': lambda: bot.send_video_note(
-            setting.channel_id,
-            video_note=content_data['video_note_file_id'],
-        ),
-        'voice': lambda: bot.send_voice(
-            setting.channel_id,
-            voice=content_data['voice_file_id'],
-            caption=f'{header}{content_data["caption"]}',
-        ),
-        'audio': lambda: bot.send_audio(
-            setting.channel_id,
-            audio=content_data['audio_file_id'],
-            caption=f'{header}{content_data["caption"]}',
-            title=content_data.get('title'),
-            performer=content_data.get('performer'),
-        ),
-        'text': lambda: bot.send_message(
-            setting.channel_id, text=f'{header}Текст:\n{content_data["text"]}'
-        ),
-    }
+    send_methods = get_send_methods(bot, header, content_data)
     try:
-        await send_methods.get(content_type)()
+        await send_methods.get(content_type)(setting.channel_id)
         await bot.send_message(
             user.id,
             'Ваше сообщение успешно отправлено',
@@ -164,56 +171,24 @@ async def send_broadcast(
 ):
     header = f'📢 Новая рассылка от бота:\n\n'
 
-    send_methods = {
-        'photo': lambda user_id: bot.send_photo(
-            user_id,
-            photo=content_data['photo_file_id'],
-            caption=f'{header}{content_data["caption"]}',
-        ),
-        'document': lambda user_id: bot.send_document(
-            user_id,
-            document=content_data['document_file_id'],
-            caption=f'{header}{content_data["caption"]}',
-        ),
-        'video': lambda user_id: bot.send_video(
-            user_id,
-            video=content_data['video_file_id'],
-            caption=f'{header}{content_data["caption"]}',
-        ),
-        'video_note': lambda user_id: bot.send_video_note(
-            user_id,
-            video_note=content_data['video_note_file_id'],
-        ),
-        'voice': lambda user_id: bot.send_voice(
-            user_id,
-            voice=content_data['voice_file_id'],
-            caption=f'{header}{content_data["caption"]}',
-        ),
-        'audio': lambda user_id: bot.send_audio(
-            user_id,
-            audio=content_data['audio_file_id'],
-            caption=f'{header}{content_data["caption"]}',
-            title=content_data.get('title'),
-            performer=content_data.get('performer'),
-        ),
-        'text': lambda user_id: bot.send_message(
-            user_id, text=f'{header}Текст:\n{content_data["text"]}'
-        ),
-    }
+    send_methods = get_send_methods(bot, header, content_data)
     success, failure = 0, 0
+
     await bot.send_message(
         admin.id, 'Начинаю рассылку...', reply_markup=ReplyKeyboardRemove()
     )
+
     if not users:
         await bot.send_message(
             admin.id,
             'Нет пользователей, подписавшихся на рассылку. Действие отменено',
         )
         return
+
     try:
-        for user in users:
+        for user_id in users:
             try:
-                await send_methods.get(content_type)(str(user))
+                await send_methods.get(content_type)(user_id)
                 success += 1
                 pause = random.uniform(0.8, 1.8)
                 await asyncio.sleep(pause)
