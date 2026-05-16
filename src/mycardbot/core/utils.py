@@ -4,6 +4,9 @@ import time
 from pathlib import Path
 
 import httpx
+from aiogram import Bot
+from aiogram.types import ReplyKeyboardRemove, User
+from core.config import setting
 
 CACHE = {'data': None, 'updated_at': 0}
 CACHE_TTL = 60 * 10
@@ -51,10 +54,57 @@ async def get_changelog():
     return result
 
 
-if __name__ == '__main__':
+async def send_message(bot: Bot, user: User, content_type: str, content_data: dict):
+    header = (
+        f'📩 Новое сообщение от пользователя:\n\n'
+        f'Имя: {user.full_name}\n'
+        f'username: @{user.username}\n'
+        f'ID: {user.id}\n\n'
+    )
 
-    async def main():
-        result = await get_changelog()
-        print(result)
-
-    asyncio.run(main())
+    send_methods = {
+        'photo': lambda: bot.send_photo(
+            setting.channel_id,
+            photo=content_data['photo_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+        ),
+        'document': lambda: bot.send_document(
+            setting.channel_id,
+            document=content_data['document_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+        ),
+        'video': lambda: bot.send_video(
+            setting.channel_id,
+            video=content_data['video_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+        ),
+        'voice': lambda: bot.send_voice(
+            setting.channel_id,
+            voice=content_data['voice_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+        ),
+        'audio': lambda: bot.send_audio(
+            setting.channel_id,
+            audio=content_data['audio_file_id'],
+            caption=f'{header}{content_data["caption"]}',
+            title=content_data.get('title'),
+            performer=content_data.get('performer'),
+        ),
+        'text': lambda: bot.send_message(
+            setting.channel_id, text=f'{header}Текст:\n{content_data["text"]}'
+        ),
+    }
+    try:
+        await send_methods.get(content_type)()
+        await bot.send_message(
+            user.id,
+            'Ваше сообщение успешно отправлено',
+            reply_markup=ReplyKeyboardRemove(),
+        )
+    except Exception as e:
+        logging.error(e)
+        await bot.send_message(
+            user.id,
+            'Произошла ошибка при отправке сообщения',
+            reply_markup=ReplyKeyboardRemove(),
+        )

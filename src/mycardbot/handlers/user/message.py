@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 from core.config import setting
 from core.database import bot_db
-from core.utils import load_html_content
+from core.utils import load_html_content, send_message
 from keyboards.user_keyboard import (
     get_main_feedback_keyboard,
     get_main_keyboard,
@@ -93,59 +93,8 @@ async def confirm_feedback(message: Message, state: FSMContext, bot: Bot):
     content_data = data.get('pending_content', {})
     content_type = data.get('content_type')
     user = message.from_user
-    try:
-        header = (
-            f'📩 Новое сообщение от пользователя:\n\n'
-            f'Имя: {user.full_name}\n'
-            f'username: @{user.username or 'нет'}\n'
-            f'ID: {user.id}\n\n'
-        )
 
-        send_methods = {
-            'photo': lambda admin: bot.send_photo(
-                admin,
-                photo=content_data['photo_file_id'],
-                caption=f'{header}{content_data["caption"]}',
-            ),
-            'document': lambda admin: bot.send_document(
-                admin,
-                document=content_data['document_file_id'],
-                caption=f'{header}{content_data["caption"]}',
-            ),
-            'video': lambda admin: bot.send_video(
-                admin,
-                video=content_data['video_file_id'],
-                caption=f'{header}{content_data["caption"]}',
-            ),
-            'voice': lambda admin: bot.send_voice(
-                admin,
-                voice=content_data['voice_file_id'],
-                caption=f'{header}{content_data["caption"]}',
-            ),
-            'audio': lambda admin: bot.send_audio(
-                admin,
-                audio=content_data['audio_file_id'],
-                caption=f'{header}{content_data["caption"]}',
-                title=content_data.get('title'),
-                performer=content_data.get('performer'),
-            ),
-            'text': lambda admin: bot.send_message(
-                admin, text=f'{header}📝 Текст:\n{content_data["text"]}'
-            ),
-        }
-        for admin in setting.admin_ids:
-            await (send_methods.get(content_type) or send_methods['text'])(admin)
-        await message.answer(
-            'Ваше сообщение успешно отправлено',
-            reply_markup=ReplyKeyboardRemove(),
-        )
-    except Exception as e:
-        logging.error(e)
-        await message.answer(
-            'Произошла ошибка при отправке сообщения',
-            reply_markup=ReplyKeyboardRemove(),
-        )
-
+    await send_message(bot, user, content_type, content_data)
     await state.clear()
     text = load_html_content('start')
     await message.answer(text, reply_markup=get_main_keyboard())
