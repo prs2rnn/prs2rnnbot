@@ -141,7 +141,10 @@ async def confirm_feedback(message: Message, state: FSMContext, bot: Bot):
         )
     except Exception as e:
         logging.error(e)
-        await message.answer('Произошла ошибка при отправке сообщения')
+        await message.answer(
+            'Произошла ошибка при отправке сообщения',
+            reply_markup=ReplyKeyboardRemove(),
+        )
 
     await state.clear()
     text = load_html_content('start')
