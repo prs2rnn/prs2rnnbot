@@ -8,6 +8,7 @@ from core.database import bot_db
 from core.setup_commands import set_commands
 from core.setup_logging import setup_logger, setup_telegram_logger
 from core.setup_routers import setup_router
+from core.utils import cleanup_task
 from middlewares.check_ban import CheckUserIsBanned
 from middlewares.logging import LoggingMiddleware
 
@@ -15,6 +16,7 @@ from middlewares.logging import LoggingMiddleware
 async def main():
     logger = setup_logger(setting.debug)
     bot = None
+    cleanup = None
     try:
         bot = Bot(setting.bot_token, default=DefaultBotProperties(parse_mode='HTML'))
         setup_telegram_logger(logger, bot)
@@ -23,6 +25,8 @@ async def main():
         await bot_db.connect()
         await bot_db.initialize()
         await bot_db.migrate()
+
+        cleanup = asyncio.create_task(cleanup_task())
 
         dp = Dispatcher()
 
@@ -36,6 +40,8 @@ async def main():
         logger.exception('Critical error')
     finally:
         await bot_db.close()
+        if cleanup:
+            cleanup.cancel()
         if bot:
             await bot.session.close()
         logger.info('Bot stopped gracefully!')

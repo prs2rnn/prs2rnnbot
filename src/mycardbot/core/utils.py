@@ -223,3 +223,12 @@ async def send_notification(bot: Bot, full_name: str, username: str, user_id: in
         logging.info('Notification sent to private channel')
     except Exception as e:
         logging.error(f'Error: {e}')
+
+
+async def cleanup_task():
+    try:
+        while True:
+            await bot_db.cleanup_old_mappings()
+            await asyncio.sleep(86400)
+    except asyncio.CancelledError:
+        pass

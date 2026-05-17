@@ -212,6 +212,18 @@ class BotDatabase:
 
             return cursor.rowcount > 0
 
+    async def cleanup_old_mappings(self):
+        async with self._lock:
+            await self._db.execute(
+                '''
+                DELETE FROM reply_map
+                WHERE created_at < (
+                    strftime('%s', 'now') - 2592000
+                );
+                '''
+            )
+            await self._db.commit()
+
 
 bot_db = BotDatabase()
 
