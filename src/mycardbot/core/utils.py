@@ -215,8 +215,8 @@ async def send_notification(bot: Bot, full_name: str, username: str, user_id: in
     text = (
         f'🆕 Новый пользователь в базе:\n\n'
         f'Имя: {full_name}\n'
-        f'Username: @{username}'
-        f'ID: {user_id}\n'
+        f'Username: @{username}\n'
+        f'ID: {user_id}'
     )
     try:
         await bot.send_message(chat_id=setting.channel_id, text=text)
