@@ -146,7 +146,7 @@ async def send_user_message(
     header = (
         f'👤 Новое сообщение от пользователя:\n\n'
         f'Имя: {user.full_name}\n'
-        f'username: @{user.username}\n'
+        f'Username: @{user.username}\n'
         f'ID: {user.id}\n\n'
     )
 
@@ -209,3 +209,17 @@ async def send_broadcast(
 
     # archive to channel
     await send_methods.get(content_type)(setting.channel_id)
+
+
+async def send_notification(bot: Bot, full_name: str, username: str, user_id: int):
+    text = (
+        f'🆕 Новый пользователь в базе:\n\n'
+        f'Имя: {full_name}\n'
+        f'Username: @{username}'
+        f'ID: {user_id}\n'
+    )
+    try:
+        await bot.send_message(chat_id=setting.channel_id, text=text)
+        logging.info('Notification sent to private channel')
+    except Exception as e:
+        logging.error(f'Error: {e}')

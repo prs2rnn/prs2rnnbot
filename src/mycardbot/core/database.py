@@ -45,19 +45,20 @@ class BotDatabase:
             await self._db.commit()
 
     async def add_user(
-        self, full_name: str, username: str, original_user_id: str
+        self, full_name: str, username: str, original_user_id: int
     ) -> bool:
         async with self._lock:
-            try:
-                await self._db.execute(
-                    'INSERT INTO users (full_name, username, original_user_id, is_subscribed) '
-                    'VALUES (?, ?, ?, ?);',
-                    (full_name, username, original_user_id, False),
-                )
-                await self._db.commit()
-                return False
-            except aiosqlite.IntegrityError:
-                return True
+            cursor = await self._db.execute(
+                '''
+                INSERT OR IGNORE
+                INTO users (full_name, username, original_user_id, is_subscribed)
+                VALUES (?, ?, ?, ?);
+                ''',
+                (full_name, username, original_user_id, False),
+            )
+            await self._db.commit()
+
+            return cursor.rowcount > 0
 
     async def list_users(self) -> str:
         async with self._lock:
@@ -196,7 +197,7 @@ class BotDatabase:
             )
             await self._db.commit()
 
-            return cursor.rowcount
+            return cursor.rowcount > 0
 
 
 bot_db = BotDatabase()
@@ -206,7 +207,7 @@ if __name__ == '__main__':
     async def main():
         await bot_db.connect()
         await bot_db.initialize()
-        await bot_db.check_is_banned(6288389426)
+        await bot_db.add_user('a', 'aaa', 123)
         await bot_db.close()
 
     asyncio.run(main())

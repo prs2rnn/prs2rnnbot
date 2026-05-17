@@ -10,7 +10,6 @@ from core.setup_logging import setup_logger
 from core.setup_routers import setup_router
 from middlewares.check_ban import CheckUserIsBanned
 from middlewares.logging import LoggingMiddleware
-from middlewares.notification import NewUserNotificationMiddleware
 
 
 async def main():
@@ -29,7 +28,6 @@ async def main():
         router = setup_router()
         dp.include_router(router)
         dp.update.outer_middleware(LoggingMiddleware(logger))
-        dp.update.outer_middleware(NewUserNotificationMiddleware(bot))
         dp.update.outer_middleware(CheckUserIsBanned())
 
         await dp.start_polling(bot)
