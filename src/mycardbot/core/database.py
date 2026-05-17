@@ -9,15 +9,21 @@ class BotDatabase:
         Path('data').mkdir(exist_ok=True)
         self._db_path = Path('data') / db_name
         self._lock = asyncio.Lock()
-        self._initialized = False
+        self._db = None
+
+    async def connect(self):
+        self._db = await aiosqlite.connect(self._db_path)
+        await self._db.execute('PRAGMA foreign_keys = ON;')
+
+    async def close(self):
+        if self._db:
+            await self._db.close()
+            self._db = None
 
     async def initialize(self):
-        if self._initialized:
-            return
         async with self._lock:
-            async with aiosqlite.connect(self._db_path) as db:
-                await db.execute(
-                    '''
+            await self._db.executescript(
+                '''
                 CREATE TABLE IF NOT EXISTS users (
                     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     full_name TEXT,
@@ -26,37 +32,42 @@ class BotDatabase:
                     started_at REAL DEFAULT ( strftime('%s', 'now') ),
                     is_subscribed BOOLEAN DEFAULT FALSE
                 );
-                '''
-                )
-                await db.commit()
-                self._initialized = True
 
-    async def add_user(self, full_name: str, username: str, original_user_id: str):
-        await self.initialize()
-        async with self._lock:
-            async with aiosqlite.connect(self._db_path) as db:
-                try:
-                    await db.execute(
-                        'INSERT INTO users (full_name, username, original_user_id, is_subscribed) '
-                        'VALUES (?, ?, ?, ?);',
-                        (full_name, username, original_user_id, False),
+                CREATE TABLE IF NOT EXISTS reply_map (
+                    group_message_id INTEGER PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    created_at REAL DEFAULT (
+                        strftime('%s', 'now')
                     )
-                    await db.commit()
-                    return False
-                except aiosqlite.IntegrityError as e:
-                    return True
+                );
+                '''
+            )
+            await self._db.commit()
+
+    async def add_user(
+        self, full_name: str, username: str, original_user_id: str
+    ) -> bool:
+        async with self._lock:
+            try:
+                await self._db.execute(
+                    'INSERT INTO users (full_name, username, original_user_id, is_subscribed) '
+                    'VALUES (?, ?, ?, ?);',
+                    (full_name, username, original_user_id, False),
+                )
+                await self._db.commit()
+                return False
+            except aiosqlite.IntegrityError:
+                return True
 
     async def list_users(self) -> str:
-        await self.initialize()
         async with self._lock:
-            async with aiosqlite.connect(self._db_path) as db:
-                cursor = await db.execute(
-                    'SELECT full_name, username,'
-                    'strftime(\'%d.%m.%Y %H:%M\', started_at, \'unixepoch\', \'+3 hours\') '
-                    'started_at, is_subscribed FROM users ORDER BY started_at DESC;'
-                )
-                rows = await cursor.fetchall()
-                return self._format_list_of_users(rows)
+            cursor = await self._db.execute(
+                'SELECT full_name, username,'
+                'strftime(\'%d.%m.%Y %H:%M\', started_at, \'unixepoch\', \'+3 hours\') '
+                'started_at, is_subscribed FROM users ORDER BY started_at DESC;'
+            )
+            rows = await cursor.fetchall()
+            return self._format_list_of_users(rows)
 
     def _format_list_of_users(self, users: list[tuple[str]], limit=10) -> str:
         display_users = users[:limit]
@@ -85,74 +96,67 @@ class BotDatabase:
 
         return text
 
-    async def subscribe(self, user_id: str):
-        await self.initialize()
+    async def subscribe(self, user_id: int) -> None:
         async with self._lock:
-            async with aiosqlite.connect(self._db_path) as db:
-                await db.execute(
-                    'UPDATE users SET is_subscribed = True WHERE original_user_id = ?',
-                    (user_id,),
-                )
-                await db.commit()
+            await self._db.execute(
+                'UPDATE users SET is_subscribed = True WHERE original_user_id = ?',
+                (user_id,),
+            )
+            await self._db.commit()
 
-    async def unsubscribe(self, user_id: str):
-        await self.initialize()
+    async def unsubscribe(self, user_id: int) -> None:
         async with self._lock:
-            async with aiosqlite.connect(self._db_path) as db:
-                await db.execute(
-                    'UPDATE users SET is_subscribed = False WHERE original_user_id = ?',
-                    (user_id,),
-                )
-                await db.commit()
+            await self._db.execute(
+                'UPDATE users SET is_subscribed = False WHERE original_user_id = ?',
+                (user_id,),
+            )
+            await self._db.commit()
 
-    async def is_subscribed(self, user_id: str) -> bool | int:
-        await self.initialize()
+    async def is_subscribed(self, user_id: int) -> bool | int:
         async with self._lock:
-            async with aiosqlite.connect(self._db_path) as db:
-                cursor = await db.execute(
-                    'SELECT is_subscribed FROM users WHERE original_user_id = ?',
-                    (user_id,),
-                )
+            cursor = await self._db.execute(
+                'SELECT is_subscribed FROM users WHERE original_user_id = ?',
+                (user_id,),
+            )
 
-                result = await cursor.fetchone()
-                return result[0] if result else None
+            result = await cursor.fetchone()
+            return result[0] if result else None
 
     async def get_subscribed_users(self):
-        await self.initialize()
         async with self._lock:
-            async with aiosqlite.connect(self._db_path) as db:
-                cursor = await db.execute(
-                    'SELECT original_user_id FROM users WHERE is_subscribed = ?',
-                    (True,),
-                )
-                result = await cursor.fetchall()
-                return (i[0] for i in result) if result else None
+            cursor = await self._db.execute(
+                'SELECT original_user_id FROM users WHERE is_subscribed = ?',
+                (True,),
+            )
+            result = await cursor.fetchall()
+            return (i[0] for i in result) if result else None
 
-    async def save_reply_map(self, group_message_id: int, user_id: int):
+    async def save_reply_mapping(self, group_message_id: int, user_id: int):
         async with self._lock:
-            async with aiosqlite.connect(self._db_path) as db:
-                await db.execute(
-                    'CREATE TABLE IF NOT EXISTS reply_map (group_message_id INTEGER, user_id INTEGER);'
-                )
-                await db.commit()
-                await db.execute(
-                    'INSERT INTO reply_map (group_message_id, user_id) VALUES (?, ?);',
-                    (
-                        group_message_id,
-                        user_id,
-                    ),
-                )
-                await db.commit()
+            await self._db.execute(
+                '''
+                INSERT INTO reply_map (group_message_id, user_id)
+                VALUES (?, ?);
+                ''',
+                (
+                    group_message_id,
+                    user_id,
+                ),
+            )
+            await self._db.commit()
 
-    async def get_user_id_by_group_message_id(self, group_message_id: int):
+    async def get_user_id(self, group_message_id: int):
         async with self._lock:
-            async with aiosqlite.connect(self._db_path) as db:
-                cursor = await db.execute(
-                    'SELECT user_id FROM reply_map WHERE group_message_id = ?;',
-                    (group_message_id,),
-                )
-                result = await cursor.fetchone()
-                return result[0] if result else None
+            cursor = await self._db.execute(
+                '''
+                SELECT user_id
+                FROM reply_map
+                WHERE group_message_id = ?;
+                ''',
+                (group_message_id,),
+            )
+            result = await cursor.fetchone()
+            return result[0] if result else None
 
 
 bot_db = BotDatabase()

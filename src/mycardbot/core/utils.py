@@ -153,7 +153,7 @@ async def send_user_message(
     send_methods = get_send_methods(bot, header, content_data)
     try:
         msg = await send_methods.get(content_type)(setting.group_id)
-        await bot_db.save_reply_map(msg.message_id, user.id)
+        await bot_db.save_reply_mapping(msg.message_id, user.id)
         await bot.send_message(
             user.id,
             f'Ваше сообщение #{msg.message_id} успешно отправлено',

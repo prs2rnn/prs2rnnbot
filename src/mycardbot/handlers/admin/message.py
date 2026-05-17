@@ -89,12 +89,12 @@ async def handle_confirm_broadcast(message: Message, state: FSMContext):
 
 @admin_message_router.message(F.chat.id == setting.group_id, F.reply_to_message)
 async def reply(message: Message, bot: Bot):
-    reply_message_id = message.reply_to_message.message_id
-    user_id = await bot_db.get_user_id_by_group_message_id(reply_message_id)
+    group_message_id = message.reply_to_message.message_id
+    user_id = await bot_db.get_user_id(group_message_id)
     try:
         await bot.send_message(
-            user_id,
-            text=f'💬 Ответ на сообщение #{reply_message_id}:\n\n{message.text}',
+            user_id if user_id else '',
+            text=f'💬 Ответ на сообщение #{group_message_id}:\n\n{message.text}',
         )
         await message.reply(f'Сообщение успешно отправлено пользователю!')
     except Exception as e:
