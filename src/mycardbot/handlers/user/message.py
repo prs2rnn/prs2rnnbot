@@ -9,6 +9,7 @@ from core.database import bot_db
 from core.utils import (
     extract_content_from_message,
     load_html_content,
+    send_notification,
     send_user_message,
 )
 from keyboards.user_keyboard import (
@@ -22,9 +23,16 @@ user_message_router = Router()
 
 
 @user_message_router.message(CommandStart())
-async def start(message: Message) -> None:
+async def start(message: Message, bot: Bot) -> None:
     text = load_html_content('start')
     await message.answer(text, reply_markup=get_main_keyboard())
+
+    user = message.from_user
+
+    is_added = await bot_db.add_user(user.full_name, user.username, user.id)
+
+    if is_added:
+        await send_notification(bot, user.full_name, user.username, user.id)
 
 
 @user_message_router.message(

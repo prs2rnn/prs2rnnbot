@@ -8,6 +8,7 @@ import httpx
 from aiogram import Bot
 from aiogram.types import Message, ReplyKeyboardRemove, User
 from core.config import setting
+from core.database import bot_db
 
 CACHE = {'data': None, 'updated_at': 0}
 CACHE_TTL = 60 * 10
@@ -89,7 +90,7 @@ def get_send_methods(bot: Bot, header: str, content_data: dict):
             performer=content_data.get('performer'),
         ),
         'text': lambda chat_id: bot.send_message(
-            chat_id, text=f'{header}Текст:\n{content_data["text"]}'
+            chat_id, text=f'{header}\n{content_data["text"]}'
         ),
     }
     return send_methods
@@ -145,16 +146,17 @@ async def send_user_message(
     header = (
         f'👤 Новое сообщение от пользователя:\n\n'
         f'Имя: {user.full_name}\n'
-        f'username: @{user.username}\n'
+        f'Username: @{user.username}\n'
         f'ID: {user.id}\n\n'
     )
 
     send_methods = get_send_methods(bot, header, content_data)
     try:
-        await send_methods.get(content_type)(setting.channel_id)
+        msg = await send_methods.get(content_type)(setting.group_id)
+        await bot_db.save_reply_mapping(msg.message_id, user.id)
         await bot.send_message(
             user.id,
-            'Ваше сообщение успешно отправлено',
+            f'Ваше сообщение #{msg.message_id} успешно отправлено',
             reply_markup=ReplyKeyboardRemove(),
         )
     except Exception as e:
@@ -207,3 +209,17 @@ async def send_broadcast(
 
     # archive to channel
     await send_methods.get(content_type)(setting.channel_id)
+
+
+async def send_notification(bot: Bot, full_name: str, username: str, user_id: int):
+    text = (
+        f'🆕 Новый пользователь в базе:\n\n'
+        f'Имя: {full_name}\n'
+        f'Username: @{username}'
+        f'ID: {user_id}\n'
+    )
+    try:
+        await bot.send_message(chat_id=setting.channel_id, text=text)
+        logging.info('Notification sent to private channel')
+    except Exception as e:
+        logging.error(f'Error: {e}')

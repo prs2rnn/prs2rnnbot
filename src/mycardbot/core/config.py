@@ -6,6 +6,7 @@ class Setting(BaseSettings):
     bot_token: str
     admin_ids: list[int]
     channel_id: int
+    group_id: int
     debug: bool
 
 

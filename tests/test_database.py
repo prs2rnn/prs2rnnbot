@@ -9,14 +9,20 @@ from src.mycardbot.core.database import BotDatabase
 async def db(tmp_path):
     database = BotDatabase(db_name='test.db')
     database._db_path = tmp_path / 'test.db'
+    await database.connect()
     await database.initialize()
-    return database
+
+    yield database
+
+    await database.close()
+
+    assert database._db is None
 
 
 class TestBotDatabase:
 
     @pytest.mark.asyncio
-    async def test_add_user(self, db):
+    async def test_add_user(self, db: BotDatabase):
         result = await db.add_user(
             full_name='John Doe', username='johndoe', original_user_id='123'
         )
@@ -24,7 +30,7 @@ class TestBotDatabase:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_add_duplicate_user(self, db):
+    async def test_add_duplicate_user(self, db: BotDatabase):
         await db.add_user(
             full_name='John Doe', username='johndoe', original_user_id='123'
         )
@@ -35,7 +41,7 @@ class TestBotDatabase:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_subscribe_user(self, db):
+    async def test_subscribe_user(self, db: BotDatabase):
         await db.add_user(
             full_name='John Doe', username='johndoe', original_user_id='123'
         )
@@ -44,7 +50,7 @@ class TestBotDatabase:
         assert result == 1
 
     @pytest.mark.asyncio
-    async def test_unsubscribe_user(self, db):
+    async def test_unsubscribe_user(self, db: BotDatabase):
         await db.add_user(
             full_name='John Doe', username='johndoe', original_user_id='123'
         )
@@ -54,7 +60,7 @@ class TestBotDatabase:
         assert result == 0
 
     @pytest.mark.asyncio
-    async def test_get_subscribed_users(self, db):
+    async def test_get_subscribed_users(self, db: BotDatabase):
         await db.add_user(
             full_name='John Doe', username='johndoe', original_user_id='123'
         )
