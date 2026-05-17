@@ -10,7 +10,6 @@ from core.database import bot_db
 class NewUserNotificationMiddleware(BaseMiddleware):
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.admin_ids = setting.admin_ids
 
     async def __call__(
         self,
@@ -44,8 +43,7 @@ class NewUserNotificationMiddleware(BaseMiddleware):
             f'Username: @{user_data['username']}'
         )
         try:
-            for admin in self.admin_ids:
-                await self.bot.send_message(chat_id=admin, text=text)
-            logging.info('Notification sent to administrators')
+            await self.bot.send_message(chat_id=setting.channel_id, text=text)
+            logging.info('Notification sent to private channel')
         except Exception as e:
             logging.error(f'Error: {e}')
