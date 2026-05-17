@@ -2,6 +2,41 @@
 
 <!-- version list -->
 
+## v0.3.0 (2026-05-17)
+
+### Bug Fixes
+
+- Notification chat replacement
+  ([`6c885d4`](https://github.com/prs2rnn/mycardbot/commit/6c885d423ce0fdb5c8c3301e1505ebe3dd0be134))
+
+### Features
+
+- Add reply system
+  ([`f2f01a7`](https://github.com/prs2rnn/mycardbot/commit/f2f01a7867c1cc9b43693b100c8d2856e90dd6b9))
+
+- Add telegram logger
+  ([`3fd39b0`](https://github.com/prs2rnn/mycardbot/commit/3fd39b0abdeb658b4ab1f214596eb1f3c4d1492b))
+
+- Users can be banned
+  ([`d7e96ad`](https://github.com/prs2rnn/mycardbot/commit/d7e96ad27893c77162720c25d3018cf5700882c0))
+
+### Refactoring
+
+- Database
+  ([`9484ffc`](https://github.com/prs2rnn/mycardbot/commit/9484ffc75002e8d1181986279ba4d7d90046a7fb))
+
+- Move notification logic in handlers
+  ([`23db022`](https://github.com/prs2rnn/mycardbot/commit/23db022f36a47fca2fc8328f0e5591fd9d3d5daa))
+
+### Testing
+
+- Database
+  ([`4857545`](https://github.com/prs2rnn/mycardbot/commit/4857545989435b2796fa7fdc95cacfc9daba1249))
+
+- Database
+  ([`a38e696`](https://github.com/prs2rnn/mycardbot/commit/a38e6961c0e12f04b0cecacfaab809a69148bce2))
+
+
 ## v0.2.0 (2026-05-16)
 
 ### Bug Fixes
