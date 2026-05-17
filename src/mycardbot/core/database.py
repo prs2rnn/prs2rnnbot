@@ -63,31 +63,30 @@ class BotDatabase:
     async def list_users(self) -> str:
         async with self._lock:
             cursor = await self._db.execute(
-                'SELECT full_name, username,'
-                'strftime(\'%d.%m.%Y %H:%M\', started_at, \'unixepoch\', \'+3 hours\') '
-                'started_at, is_subscribed FROM users ORDER BY started_at DESC;'
+                '''
+                SELECT full_name, username, original_user_id,
+                is_subscribed, is_ban,
+                strftime(\'%d.%m.%Y %H:%M\', started_at, \'unixepoch\', \'+3 hours\') as started_at
+                FROM users
+                ORDER BY started_at DESC;
+                '''
             )
+            header = [i[0] for i in cursor.description]
             rows = await cursor.fetchall()
-            return self._format_list_of_users(rows)
+            return self._format_list_of_users(header, rows)
 
-    def _format_list_of_users(self, users: list[tuple[str]], limit=10) -> str:
+    def _format_list_of_users(
+        self, header: list[str], users: list[tuple[str]], limit=10
+    ) -> str:
         display_users = users[:limit]
         total = len(users)
 
         text = '👥 Список пользователей:\n\n'
-        header = '<b>Имя</b>\t\t<b>username</b>\t\t<b>Дата регистрации</b>\t\t<b>Подписка на рассылку</b>\n\n'
-        text += header
-
-        for user in users:
-            full_name, username, started_at, is_subscribed = user
-            text += '\t\t'.join(
-                (
-                    full_name,
-                    f'@{username}',
-                    started_at,
-                    str(is_subscribed),
-                )
-            )
+        text += ', '.join(header)
+        text += '\n'
+        for i, u in enumerate(users, start=1):
+            text += f'{i}. '
+            text += ', '.join(map(str, u))
             text += '\n'
 
         if total > limit:
@@ -191,6 +190,20 @@ class BotDatabase:
                 '''
                 UPDATE users
                 SET is_ban = True
+                WHERE original_user_id = ?;
+                ''',
+                (user_id,),
+            )
+            await self._db.commit()
+
+            return cursor.rowcount > 0
+
+    async def unban_user(self, user_id: int) -> bool:
+        async with self._lock:
+            cursor = await self._db.execute(
+                '''
+                UPDATE users
+                SET is_ban = False
                 WHERE original_user_id = ?;
                 ''',
                 (user_id,),

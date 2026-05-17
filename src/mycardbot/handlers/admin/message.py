@@ -101,9 +101,11 @@ async def handle_confirm_broadcast(message: Message, state: FSMContext):
 async def reply(message: Message, bot: Bot):
     group_message_id = message.reply_to_message.message_id
     user_id = await bot_db.get_user_id(group_message_id)
+    if not user_id:
+        return
     try:
         await bot.send_message(
-            user_id if user_id else '',
+            user_id,
             text=f'💬 Ответ на сообщение #{group_message_id}:\n\n{message.text}',
         )
         await message.reply(f'Сообщение успешно отправлено пользователю!')
@@ -126,3 +128,21 @@ async def ban_user(message: Message, command: CommandObject):
         await message.answer(f'Пользователь с ID <i>{user_id}</i> забанен')
     else:
         await message.answer(f'Не удалось забанить пользователя с ID: <i>{user_id}</i>')
+
+
+@admin_message_router.message(Command('unban'), IsAdmin())
+async def unban_user(message: Message, command: CommandObject):
+    user_id = command.args
+
+    if not user_id:
+        await message.answer('Укажите ID пользователя, например <i>/unban 123</i>')
+        return
+
+    is_ok = await bot_db.unban_user(user_id)
+
+    if is_ok:
+        await message.answer(f'Пользователь с ID <i>{user_id}</i> разбанен')
+    else:
+        await message.answer(
+            f'Не удалось разбанить пользователя с ID: <i>{user_id}</i>'
+        )

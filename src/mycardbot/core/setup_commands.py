@@ -10,6 +10,7 @@ async def set_commands(bot: Bot, admin_ids: list[int]):
         *user_commands,
         BotCommand(command="admin", description="Панель администратора"),
         BotCommand(command="ban", description="Добавить пользователя в бан"),
+        BotCommand(command="unban", description="Разбанить пользователя"),
     ]
 
     await bot.set_my_commands(user_commands, scope=BotCommandScopeDefault())
