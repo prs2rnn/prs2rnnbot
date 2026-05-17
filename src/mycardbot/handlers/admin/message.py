@@ -3,7 +3,7 @@ import html
 import logging
 
 from aiogram import Bot, F, Router
-from aiogram.filters import Command, StateFilter
+from aiogram.filters import Command, CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 from core.config import setting
@@ -24,7 +24,7 @@ async def list(message: Message) -> None:
 
 
 @admin_message_router.message(
-    StateFilter(BroadcastStates.waiting_for_message), F.text == 'Отменить'
+    StateFilter(BroadcastStates.waiting_for_message), F.text == 'Отменить', IsAdmin()
 )
 async def cancel_broadcast(message: Message, state: FSMContext):
     await state.clear()
@@ -34,7 +34,9 @@ async def cancel_broadcast(message: Message, state: FSMContext):
     await message.answer(text, reply_markup=get_main_keyboard())
 
 
-@admin_message_router.message(StateFilter(BroadcastStates.waiting_for_message))
+@admin_message_router.message(
+    StateFilter(BroadcastStates.waiting_for_message), IsAdmin()
+)
 async def handle_broadcast(message: Message, state: FSMContext):
     content_data, content_type = await extract_content_from_message(message)
     if not content_data or not content_type:
@@ -51,7 +53,9 @@ async def handle_broadcast(message: Message, state: FSMContext):
 
 
 @admin_message_router.message(
-    StateFilter(BroadcastStates.waiting_for_confirmation), F.text == 'Подтвердить'
+    StateFilter(BroadcastStates.waiting_for_confirmation),
+    F.text == 'Подтвердить',
+    IsAdmin(),
 )
 async def confirm_broadcast(message: Message, state: FSMContext, bot: Bot):
     data = await state.get_data()
@@ -69,7 +73,9 @@ async def confirm_broadcast(message: Message, state: FSMContext, bot: Bot):
 
 
 @admin_message_router.message(
-    StateFilter(BroadcastStates.waiting_for_confirmation), F.text == 'Отменить'
+    StateFilter(BroadcastStates.waiting_for_confirmation),
+    F.text == 'Отменить',
+    IsAdmin(),
 )
 async def cancel_confirm_broadcast(message: Message, state: FSMContext):
     await state.clear()
@@ -79,7 +85,9 @@ async def cancel_confirm_broadcast(message: Message, state: FSMContext):
     await message.answer(text, reply_markup=get_main_keyboard())
 
 
-@admin_message_router.message(StateFilter(BroadcastStates.waiting_for_confirmation))
+@admin_message_router.message(
+    StateFilter(BroadcastStates.waiting_for_confirmation), IsAdmin()
+)
 async def handle_confirm_broadcast(message: Message, state: FSMContext):
     await message.answer(
         'Подтвердите или отмените отправку',
@@ -87,7 +95,9 @@ async def handle_confirm_broadcast(message: Message, state: FSMContext):
     )
 
 
-@admin_message_router.message(F.chat.id == setting.group_id, F.reply_to_message)
+@admin_message_router.message(
+    F.chat.id == setting.group_id, F.reply_to_message, IsAdmin()
+)
 async def reply(message: Message, bot: Bot):
     group_message_id = message.reply_to_message.message_id
     user_id = await bot_db.get_user_id(group_message_id)
@@ -100,3 +110,19 @@ async def reply(message: Message, bot: Bot):
     except Exception as e:
         logging.error(e)
         await message.reply(f'Не удалось отправить сообщение пользователю')
+
+
+@admin_message_router.message(Command('ban'), IsAdmin())
+async def ban_user(message: Message, command: CommandObject):
+    user_id = command.args
+
+    if not user_id:
+        await message.answer('Укажите ID пользователя, например <i>/ban 123</i>')
+        return
+
+    is_ok = await bot_db.ban_user(user_id)
+
+    if is_ok:
+        await message.answer(f'Пользователь с ID <i>{user_id}</i> забанен')
+    else:
+        await message.answer(f'Не удалось забанить пользователя с ID: <i>{user_id}</i>')

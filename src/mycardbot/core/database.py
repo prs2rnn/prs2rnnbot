@@ -158,5 +158,55 @@ class BotDatabase:
             result = await cursor.fetchone()
             return result[0] if result else None
 
+    async def migrate(self):
+        cursor = await self._db.execute('PRAGMA table_info(users);')
+        columns = await cursor.fetchall()
+
+        column_names = [column[1] for column in columns]
+
+        if 'is_ban' not in column_names:
+            await self._db.execute(
+                '''
+                ALTER TABLE users
+                ADD COLUMN is_ban BOOLEAN DEFAULT FALSE;
+                '''
+            )
+            await self._db.commit()
+
+    async def check_is_banned(self, user_id: int) -> bool:
+        cursor = await self._db.execute(
+            '''
+            SELECT is_ban FROM users WHERE original_user_id = ?;
+            ''',
+            (user_id,),
+        )
+        result = await cursor.fetchone()
+
+        return result[0] if result else 0
+
+    async def ban_user(self, user_id: int) -> bool:
+        async with self._lock:
+            cursor = await self._db.execute(
+                '''
+                UPDATE users
+                SET is_ban = True
+                WHERE original_user_id = ?;
+                ''',
+                (user_id,),
+            )
+            await self._db.commit()
+
+            return cursor.rowcount
+
 
 bot_db = BotDatabase()
+
+if __name__ == '__main__':
+
+    async def main():
+        await bot_db.connect()
+        await bot_db.initialize()
+        await bot_db.check_is_banned(6288389426)
+        await bot_db.close()
+
+    asyncio.run(main())

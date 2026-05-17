@@ -8,6 +8,7 @@ from core.database import bot_db
 from core.setup_commands import set_commands
 from core.setup_logging import setup_logger
 from core.setup_routers import setup_router
+from middlewares.check_ban import CheckUserIsBanned
 from middlewares.logging import LoggingMiddleware
 from middlewares.notification import NewUserNotificationMiddleware
 
@@ -21,6 +22,7 @@ async def main():
 
         await bot_db.connect()
         await bot_db.initialize()
+        await bot_db.migrate()
 
         dp = Dispatcher()
 
@@ -28,6 +30,7 @@ async def main():
         dp.include_router(router)
         dp.update.outer_middleware(LoggingMiddleware(logger))
         dp.update.outer_middleware(NewUserNotificationMiddleware(bot))
+        dp.update.outer_middleware(CheckUserIsBanned())
 
         await dp.start_polling(bot)
     except Exception as e:
