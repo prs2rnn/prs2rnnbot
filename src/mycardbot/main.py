@@ -6,7 +6,7 @@ from aiogram.client.default import DefaultBotProperties
 from core.config import setting
 from core.database import bot_db
 from core.setup_commands import set_commands
-from core.setup_logging import setup_logger
+from core.setup_logging import setup_logger, setup_telegram_logger
 from core.setup_routers import setup_router
 from middlewares.check_ban import CheckUserIsBanned
 from middlewares.logging import LoggingMiddleware
@@ -17,6 +17,7 @@ async def main():
     bot = None
     try:
         bot = Bot(setting.bot_token, default=DefaultBotProperties(parse_mode='HTML'))
+        setup_telegram_logger(logger, bot)
         await set_commands(bot, setting.admin_ids)
 
         await bot_db.connect()
@@ -31,8 +32,8 @@ async def main():
         dp.update.outer_middleware(CheckUserIsBanned())
 
         await dp.start_polling(bot)
-    except Exception as e:
-        logger.critical(f'Critical error: {e}', exc_info=True)
+    except Exception:
+        logger.exception('Critical error')
     finally:
         await bot_db.close()
         if bot:
