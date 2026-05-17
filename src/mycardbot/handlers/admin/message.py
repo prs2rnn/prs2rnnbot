@@ -6,6 +6,7 @@ from aiogram import Bot, F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
+from core.config import setting
 from core.database import bot_db
 from core.utils import extract_content_from_message, load_html_content, send_broadcast
 from filters.check_admin import IsAdmin
@@ -84,3 +85,18 @@ async def handle_confirm_broadcast(message: Message, state: FSMContext):
         'Подтвердите или отмените отправку',
         reply_markup=get_proceed_broadcast_keyboard(),
     )
+
+
+@admin_message_router.message(F.chat.id == setting.group_id, F.reply_to_message)
+async def reply(message: Message, bot: Bot):
+    reply_message_id = message.reply_to_message.message_id
+    user_id = await bot_db.get_user_id_by_group_message_id(reply_message_id)
+    try:
+        await bot.send_message(
+            user_id,
+            text=f'💬 Ответ на сообщение #{reply_message_id}:\n\n{message.text}',
+        )
+        await message.reply(f'Сообщение успешно отправлено пользователю!')
+    except Exception as e:
+        logging.error(e)
+        await message.reply(f'Не удалось отправить сообщение пользователю')

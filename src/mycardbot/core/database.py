@@ -128,5 +128,31 @@ class BotDatabase:
                 result = await cursor.fetchall()
                 return (i[0] for i in result) if result else None
 
+    async def save_reply_map(self, group_message_id: int, user_id: int):
+        async with self._lock:
+            async with aiosqlite.connect(self._db_path) as db:
+                await db.execute(
+                    'CREATE TABLE IF NOT EXISTS reply_map (group_message_id INTEGER, user_id INTEGER);'
+                )
+                await db.commit()
+                await db.execute(
+                    'INSERT INTO reply_map (group_message_id, user_id) VALUES (?, ?);',
+                    (
+                        group_message_id,
+                        user_id,
+                    ),
+                )
+                await db.commit()
+
+    async def get_user_id_by_group_message_id(self, group_message_id: int):
+        async with self._lock:
+            async with aiosqlite.connect(self._db_path) as db:
+                cursor = await db.execute(
+                    'SELECT user_id FROM reply_map WHERE group_message_id = ?;',
+                    (group_message_id,),
+                )
+                result = await cursor.fetchone()
+                return result[0] if result else None
+
 
 bot_db = BotDatabase()
