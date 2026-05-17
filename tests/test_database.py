@@ -23,22 +23,22 @@ class TestBotDatabase:
 
     @pytest.mark.asyncio
     async def test_add_user(self, db: BotDatabase):
-        result = await db.add_user(
+        is_added = await db.add_user(
             full_name='John Doe', username='johndoe', original_user_id='123'
         )
 
-        assert result is False
+        assert is_added
 
     @pytest.mark.asyncio
     async def test_add_duplicate_user(self, db: BotDatabase):
         await db.add_user(
             full_name='John Doe', username='johndoe', original_user_id='123'
         )
-        result = await db.add_user(
+        is_added = await db.add_user(
             full_name='John Doe', username='johndoe', original_user_id='123'
         )
 
-        assert result is True
+        assert not is_added
 
     @pytest.mark.asyncio
     async def test_subscribe_user(self, db: BotDatabase):
