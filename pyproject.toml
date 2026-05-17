@@ -1,6 +1,6 @@
 [project]
 name = "mycardbot"
-version = "0.4.0"
+version = "0.4.1"
 description = "MyCardBot is a bot that serves as a personal portfolio"
 authors = [
     {name = "prs2rnn",email = "developer.prs2rnn@gmail.com"}
